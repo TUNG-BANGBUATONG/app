@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  Switch,
   Alert,
+  Dimensions,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
+  ScrollView,
   StatusBar,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 // Dimensions helper for layout
 const { width } = Dimensions.get('window');
@@ -41,9 +42,9 @@ const INITIAL_PRODUCTS: Product[] = [
     grade: 'PG',
     scale: '1/60',
     price: 180.00,
-    image: '🤖',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwqF5wCKg-m8EXDx6tCAfnzCbg4qXIFG_dIgAVaPLXggCnO4mLrNZ4nI0&s=10',
     isActive: true,
-    color: '#FF6C6A', // Coral Red (Theme match)
+    color: '#DC2626', // Brand Red (Theme match)
     description: 'The ultimate evolution of RX-78-2 Gundam featuring multi-layer inner frames, extensive metal parts, and a comprehensive LED system. Truly the pinnacle of Gunpla design.',
     rating: 5.0,
     reviews: 8712,
@@ -54,9 +55,9 @@ const INITIAL_PRODUCTS: Product[] = [
     grade: 'MG',
     scale: '1/100',
     price: 55.00,
-    image: '🦁',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-rNCQhR3UWI-Hey7TL_5WHjsAB8s65WssTv_Rz4YmOjXqCLtVoj7SepBK&s=10',
     isActive: true,
-    color: '#FBBF24', // Amber
+    color: '#1E3A8A', // Deep Navy Blue
     description: 'Featuring the highly detailed Gundam Frame, this MG kit boasts a massive mace, tail blade with wire, and extreme articulation to pose in wild, beast-like stances.',
     rating: 4.8,
     reviews: 4219,
@@ -67,9 +68,9 @@ const INITIAL_PRODUCTS: Product[] = [
     grade: 'RG',
     scale: '1/144',
     price: 38.00,
-    image: '🛸',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRCEZ0xvR23e7BlEwM-Ky9fGJIzZz8iov8XWgPtCi54Q&s=10',
     isActive: true,
-    color: '#3CE0B0', // Mint Cyan (Theme match)
+    color: '#2563EB', // Royal Blue
     description: 'From "The Witch from Mercury", this Real Grade kit offers unmatched detail density, color separation, and dynamic joint systems capturing the sleek look of the Aerial Rebuild.',
     rating: 4.9,
     reviews: 3105,
@@ -80,9 +81,9 @@ const INITIAL_PRODUCTS: Product[] = [
     grade: 'HG',
     scale: '1/144',
     price: 28.00,
-    image: '✨',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-h8duJWIDWaT3bycIRKQX-lOOj72pySI2PEweQmq9gBfcVju3ZEfpAzI&s=10',
     isActive: false,
-    color: '#A78BFA', // Purple
+    color: '#64748B', // Steel Slate
     description: 'Equipped with the psycho-frame test parts on its body, this high grade kit recreates the psycho-frame parts using beautiful clear pink runner pieces.',
     rating: 4.5,
     reviews: 1892,
@@ -95,7 +96,7 @@ const INITIAL_PRODUCTS: Product[] = [
     price: 12.50,
     image: '🧸',
     isActive: true,
-    color: '#34D399', // Emerald Green
+    color: '#94A3B8', // Light Slate/Gray
     description: 'A stylized Nu Gundam combining compact proportions with high weapon compatibility. Perfect for beginners and desk decoration.',
     rating: 4.6,
     reviews: 978,
@@ -116,7 +117,7 @@ function MainApp() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
+
   // App Core States
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -166,11 +167,11 @@ function MainApp() {
     }
 
     const gradeColors = {
-      PG: '#FF6C6A', // Coral Red
-      MG: '#FBBF24', // Amber
-      RG: '#3CE0B0', // Mint
-      HG: '#A78BFA', // Purple
-      SD: '#34D399', // Green
+      PG: '#DC2626', // Brand Red
+      MG: '#1E3A8A', // Deep Navy
+      RG: '#2563EB', // Royal Blue
+      HG: '#64748B', // Steel Slate
+      SD: '#94A3B8', // Light Slate
     };
 
     const gradeScales = {
@@ -199,7 +200,7 @@ function MainApp() {
     };
 
     setProducts([newProduct, ...products]);
-    
+
     // Reset Form
     setNewProductName('');
     setNewProductPrice('');
@@ -244,8 +245,8 @@ function MainApp() {
 
   // Filtering Logic
   const filteredProducts = products.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          p.grade.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.grade.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === 'All' || p.grade === filterCategory;
     const matchesStatus = filterStatus === 'ALL' || (filterStatus === 'ACTIVE_ONLY' && p.isActive);
     return matchesSearch && matchesCategory && matchesStatus;
@@ -274,8 +275,11 @@ function MainApp() {
         >
           <View style={styles.loginCard}>
             <View style={styles.logoContainer}>
-              <Text style={styles.logoIcon}>🤖</Text>
-              <Text style={styles.loginTitle}>MECHA BASE</Text>
+              <Image
+                source={{ uri: 'https://i.pinimg.com/736x/0b/6b/98/0b6b98c6538a7df953d7395e363fc2f6.jpg' }}
+                style={styles.logoImage}
+              />
+              <Text style={styles.loginTitle}>GUNPLA BASE</Text>
               <Text style={styles.loginSubtitle}>Gunpla E-commerce Manager</Text>
             </View>
 
@@ -325,14 +329,14 @@ function MainApp() {
     return (
       <SafeAreaView style={styles.detailContainer}>
         <StatusBar barStyle="dark-content" />
-        
+
         {/* Top Header Row with Back and Status toggle */}
         <View style={styles.detailHeader}>
           <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedProduct(null)}>
             <Text style={styles.backBtnIcon}>←</Text>
           </TouchableOpacity>
           <Text style={styles.detailTitleText}>PRODUCT DETAILS</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[
               styles.detailStatusBadge,
               { backgroundColor: selectedProduct.isActive ? '#D1FAE5' : '#FEE2E2' }
@@ -348,7 +352,11 @@ function MainApp() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Main Hero Product Image with colored background box */}
           <View style={[styles.detailHeroImageBg, { backgroundColor: selectedProduct.color }]}>
-            <Text style={styles.detailHeroEmoji}>{selectedProduct.image}</Text>
+            {selectedProduct.image.startsWith('http') ? (
+              <Image source={{ uri: selectedProduct.image }} style={styles.detailHeroImage} />
+            ) : (
+              <Text style={styles.detailHeroEmoji}>{selectedProduct.image}</Text>
+            )}
           </View>
 
           {/* Product Details Section */}
@@ -405,12 +413,12 @@ function MainApp() {
 
         {/* Floating bottom add button matching Reebok App */}
         <View style={styles.detailBottomBar}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.addToBagBtn, { backgroundColor: selectedProduct.isActive ? '#3CE0B0' : '#8D93A3' }]}
             onPress={() => {
               Alert.alert(
                 selectedProduct.isActive ? 'Purchase Simulated' : 'Out of Stock',
-                selectedProduct.isActive 
+                selectedProduct.isActive
                   ? `Simulating Gundam purchase of ${selectedProduct.name}!`
                   : `This Gundam is currently stocked out.`
               );
@@ -429,7 +437,7 @@ function MainApp() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      
+
       {/* 1. HEADER (Explore title on Left, profile avatar on Right) */}
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
@@ -501,7 +509,7 @@ function MainApp() {
 
         {/* Gender style Segmented Control: ALL KITS / ACTIVE ONLY */}
         <View style={styles.segmentedControlContainer}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.segmentBtn, filterStatus === 'ALL' && styles.segmentBtnActive]}
             onPress={() => setFilterStatus('ALL')}
           >
@@ -509,7 +517,7 @@ function MainApp() {
               ALL KITS
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.segmentBtn, filterStatus === 'ACTIVE_ONLY' && styles.segmentBtnActive]}
             onPress={() => setFilterStatus('ACTIVE_ONLY')}
           >
@@ -522,11 +530,11 @@ function MainApp() {
 
       {/* 2. BODY CONTENT AREA */}
       <View style={styles.body}>
-        
+
         {/* --- HOME TAB VIEW (Reebok App Sports Section Grid) --- */}
         {activeTab === 'Home' && (
           <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
-            
+
             {/* Banner/Hero element */}
             <View style={styles.heroCard}>
               <View style={styles.heroTextContent}>
@@ -576,7 +584,7 @@ function MainApp() {
                 <Text style={styles.seeAllLink}>MORE ➜</Text>
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -591,30 +599,34 @@ function MainApp() {
                 >
                   {/* Styled Image background with Reebok colored corner style */}
                   <View style={[styles.featuredImageBg, { backgroundColor: item.color }]}>
-                    <Text style={styles.featuredEmoji}>{item.image}</Text>
+                    {item.image.startsWith('http') ? (
+                      <Image source={{ uri: item.image }} style={styles.featuredImage} />
+                    ) : (
+                      <Text style={styles.featuredEmoji}>{item.image}</Text>
+                    )}
                     {/* Reebok Style White floating Add icon on corner */}
-                    <TouchableOpacity 
+                    <TouchableOpacity
                       style={styles.cardAddButtonFloat}
                       onPress={() => toggleProductStatus(item.id)}
                     >
                       <Text style={styles.cardAddButtonFloatText}>{item.isActive ? '✓' : '+'}</Text>
                     </TouchableOpacity>
                   </View>
-                  
+
                   {/* Product Details under image */}
                   <Text style={styles.featuredPrice}>${item.price.toFixed(0)}</Text>
-                  
+
                   <View style={styles.featuredRatingRow}>
                     <Text style={styles.featuredStars}>⭐⭐⭐⭐⭐</Text>
                   </View>
-                  
+
                   <Text style={styles.featuredName} numberOfLines={1}>
                     {item.name}
                   </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            
+
             <View style={{ height: 30 }} />
           </ScrollView>
         )}
@@ -649,14 +661,18 @@ function MainApp() {
             ) : (
               <ScrollView showsVerticalScrollIndicator={false} style={styles.productsScrollView}>
                 {filteredProducts.map((item) => (
-                  <TouchableOpacity 
-                    key={item.id} 
+                  <TouchableOpacity
+                    key={item.id}
                     style={styles.productCard}
                     onPress={() => setSelectedProduct(item)}
                   >
                     {/* Visual Card Image with gradient styling */}
                     <View style={[styles.productImageContainer, { backgroundColor: item.color }]}>
-                      <Text style={styles.productEmoji}>{item.image}</Text>
+                      {item.image.startsWith('http') ? (
+                        <Image source={{ uri: item.image }} style={styles.productImage} />
+                      ) : (
+                        <Text style={styles.productEmoji}>{item.image}</Text>
+                      )}
                       <View style={styles.gradeBadgeOverlay}>
                         <Text style={styles.gradeBadgeText}>{item.grade}</Text>
                       </View>
@@ -668,7 +684,7 @@ function MainApp() {
                         {item.name}
                       </Text>
                       <Text style={styles.productCardPrice}>${item.price.toFixed(2)}</Text>
-                      
+
                       {/* Active Status controls */}
                       <View style={styles.statusToggleRow}>
                         <View
@@ -838,14 +854,14 @@ function MainApp() {
                         width: `${stat.percentage || 1}%`,
                         backgroundColor:
                           stat.grade === 'PG'
-                            ? '#FF6C6A'
+                            ? '#DC2626'
                             : stat.grade === 'MG'
-                            ? '#FBBF24'
-                            : stat.grade === 'RG'
-                            ? '#3CE0B0'
-                            : stat.grade === 'HG'
-                            ? '#A78BFA'
-                            : '#34D399',
+                              ? '#1E3A8A'
+                              : stat.grade === 'RG'
+                                ? '#2563EB'
+                                : stat.grade === 'HG'
+                                  ? '#64748B'
+                                  : '#94A3B8',
                       },
                     ]}
                   />
@@ -861,7 +877,7 @@ function MainApp() {
                 </View>
               </View>
             ))}
-            
+
             <View style={{ height: 40 }} />
           </ScrollView>
         )}
@@ -953,6 +969,12 @@ const styles = StyleSheet.create({
     fontSize: 56,
     marginBottom: 12,
   },
+  logoImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginBottom: 16,
+  },
   loginTitle: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -989,12 +1011,12 @@ const styles = StyleSheet.create({
   loginButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#3CE0B0', // Theme Mint Accent
+    backgroundColor: '#2563EB', // Theme Royal Blue
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 12,
-    shadowColor: '#3CE0B0',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
@@ -1016,7 +1038,7 @@ const styles = StyleSheet.create({
     borderColor: '#F3F4F6',
   },
   tipTitle: {
-    color: '#FF6C6A',
+    color: '#DC2626',
     fontSize: 12,
     fontWeight: 'bold',
     marginBottom: 4,
@@ -1069,7 +1091,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6',
   },
   logoutBtnText: {
-    color: '#FF6C6A',
+    color: '#DC2626',
     fontSize: 11,
     fontWeight: 'bold',
     letterSpacing: 0.5,
@@ -1078,7 +1100,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: '#FFE4E6',
+    backgroundColor: '#DBEAFE',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -1114,7 +1136,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   headerAddBtn: {
-    backgroundColor: '#3CE0B0', // Theme Mint
+    backgroundColor: '#2563EB', // Theme Royal Blue
     height: 44,
     paddingHorizontal: 16,
     borderRadius: 10,
@@ -1151,8 +1173,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   filterPillActive: {
-    backgroundColor: '#3CE0B0', // Theme Mint
-    borderColor: '#3CE0B0',
+    backgroundColor: '#2563EB', // Theme Royal Blue
+    borderColor: '#2563EB',
   },
   filterPillIcon: {
     fontSize: 16,
@@ -1180,7 +1202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   segmentBtnActive: {
-    backgroundColor: '#3CE0B0', // Mint active capsule
+    backgroundColor: '#2563EB', // Theme Royal Blue
   },
   segmentBtnText: {
     color: '#8D93A3',
@@ -1226,7 +1248,7 @@ const styles = StyleSheet.create({
   },
   heroBadge: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FF6C6A', // Theme Coral Red
+    backgroundColor: '#DC2626', // Theme Coral Red
     color: '#FFFFFF',
     fontSize: 9,
     fontWeight: 'bold',
@@ -1249,18 +1271,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   heroPrice: {
-    color: '#FF6C6A',
+    color: '#DC2626',
     fontSize: 18,
     fontWeight: 'bold',
   },
   heroBtn: {
-    backgroundColor: '#3CE0B0', // Mint active arrow button
+    backgroundColor: '#2563EB', // Mint active arrow button
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3CE0B0',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -1288,7 +1310,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   seeAllLink: {
-    color: '#3CE0B0', // Theme Mint color
+    color: '#2563EB', // Theme Mint color
     fontSize: 11,
     fontWeight: 'bold',
   },
@@ -1352,6 +1374,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     position: 'relative',
   },
+  featuredImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
   featuredEmoji: {
     fontSize: 48,
   },
@@ -1379,7 +1406,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   featuredPrice: {
-    color: '#FF6C6A', // Coral red price
+    color: '#DC2626', // Brand Red price
     fontSize: 18,
     fontWeight: 'bold',
     marginTop: 2,
@@ -1446,6 +1473,12 @@ const styles = StyleSheet.create({
   productEmoji: {
     fontSize: 34,
   },
+  productImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+    resizeMode: 'contain',
+  },
   gradeBadgeOverlay: {
     position: 'absolute',
     bottom: 4,
@@ -1456,7 +1489,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   gradeBadgeText: {
-    color: '#3CE0B0',
+    color: '#FFFFFF',
     fontSize: 8,
     fontWeight: 'bold',
   },
@@ -1472,7 +1505,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   productCardPrice: {
-    color: '#FF6C6A',
+    color: '#DC2626',
     fontSize: 15,
     fontWeight: 'bold',
     marginBottom: 6,
@@ -1548,7 +1581,7 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   clearFilterBtnText: {
-    color: '#3CE0B0',
+    color: '#2563EB',
     fontWeight: 'bold',
     fontSize: 13,
   },
@@ -1618,8 +1651,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   gradeSelectBtnActive: {
-    backgroundColor: '#3CE0B0',
-    borderColor: '#3CE0B0',
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
   gradeSelectBtnText: {
     color: '#8D93A3',
@@ -1647,12 +1680,12 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   formSubmitBtn: {
-    backgroundColor: '#3CE0B0',
+    backgroundColor: '#2563EB',
     height: 48,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3CE0B0',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
@@ -1713,7 +1746,7 @@ const styles = StyleSheet.create({
   },
   categoryCountBadge: {
     color: '#FFFFFF',
-    backgroundColor: '#3CE0B0',
+    backgroundColor: '#2563EB',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 6,
@@ -1763,7 +1796,7 @@ const styles = StyleSheet.create({
     color: '#8D93A3',
   },
   navIconActiveColor: {
-    color: '#3CE0B0', // Active Tab Color
+    color: '#2563EB', // Active Tab Color
   },
   navText: {
     fontSize: 9,
@@ -1797,8 +1830,8 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   floatingCartBtnActive: {
-    backgroundColor: '#3CE0B0', // Floating button turns mint when active!
-    borderColor: '#3CE0B0',
+    backgroundColor: '#2563EB', // Floating button turns mint when active!
+    borderColor: '#2563EB',
   },
   floatingCartIcon: {
     fontSize: 22,
@@ -1857,6 +1890,11 @@ const styles = StyleSheet.create({
   detailHeroEmoji: {
     fontSize: 110,
   },
+  detailHeroImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
   detailContent: {
     padding: 20,
   },
@@ -1877,7 +1915,7 @@ const styles = StyleSheet.create({
   detailPrice: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#FF6C6A', // Red Run style price
+    color: '#DC2626', // Red Run style price
   },
   detailRatingRow: {
     flexDirection: 'row',
@@ -1929,7 +1967,7 @@ const styles = StyleSheet.create({
   scaleTabUnitActive: {
     fontSize: 11,
     fontWeight: 'bold',
-    color: '#3CE0B0', // Active unit
+    color: '#2563EB', // Active unit
   },
   scaleOptionsGrid: {
     flexDirection: 'row',
@@ -1948,8 +1986,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   scaleOptionBtnActive: {
-    backgroundColor: '#3CE0B0', // Reebok active select option
-    borderColor: '#3CE0B0',
+    backgroundColor: '#2563EB', // Reebok active select option
+    borderColor: '#2563EB',
   },
   scaleOptionText: {
     fontSize: 12,
@@ -1970,7 +2008,7 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#3CE0B0',
+    shadowColor: '#2563EB',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
