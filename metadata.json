@@ -1,0 +1,6 @@
+{
+  "name": "Catalog Go",
+  "description": "A responsive product catalog application with login, product search, filters, bottom navigation, and catalog management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
