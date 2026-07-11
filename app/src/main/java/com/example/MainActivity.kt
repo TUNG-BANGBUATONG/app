@@ -64,10 +64,10 @@ data class Product(
 // 2. VIEWMODEL FOR STATE MANAGEMENT
 // ==========================================
 class CatalogViewModel : ViewModel() {
-    private val _isLoggedIn = MutableStateFlow(false)
+    private val _isLoggedIn = MutableStateFlow(true)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    private val _username = MutableStateFlow("")
+    private val _username = MutableStateFlow("Customer")
     val username: StateFlow<String> = _username.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
@@ -268,17 +268,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainAppContent() {
     val viewModel: CatalogViewModel = viewModel()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
-
-    if (!isLoggedIn) {
-        LoginScreen(
-            onLoginSuccess = { user, pass ->
-                viewModel.login(user, pass)
-            }
-        )
-    } else {
-        MainNavigationContainer(viewModel = viewModel)
-    }
+    MainNavigationContainer(viewModel = viewModel)
 }
 
 // ==========================================
@@ -658,17 +648,17 @@ fun HeaderSection(
                     )
                 }
 
-                // Profile / Logout simple circle button
-                IconButton(
-                    onClick = { viewModel.logout() },
+                // Profile static circle badge
+                Box(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ExitToApp,
-                        contentDescription = "ออกจากระบบ (Logout)",
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Profile",
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(20.dp)
                     )
@@ -748,23 +738,6 @@ fun HeaderSection(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-
-                // Button: Add Product (ปุ่ม + Add Product) - styled as a bright premium rounded box
-                IconButton(
-                    onClick = onAddClick,
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.primary)
-                        .testTag("add_product_header_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add product",
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
         }
     }
@@ -822,14 +795,6 @@ fun BottomNavigationBar(
                     label = "Products",
                     isActive = activeTab == "products",
                     onClick = { onTabSelect("products") }
-                )
-
-                // Add Tab
-                BottomTabItem(
-                    emoji = "➕",
-                    label = "Add",
-                    isActive = activeTab == "add",
-                    onClick = { onTabSelect("add") }
                 )
 
                 // Categories Tab
@@ -1371,7 +1336,6 @@ fun ProductCardItem(
                             if (product.status == "Active") MaterialTheme.colorScheme.primaryContainer
                             else MaterialTheme.colorScheme.outline
                         )
-                        .clickable { onToggleStatus() }
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Row(
@@ -2135,12 +2099,11 @@ fun ProductDetailDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Status Badge Toggle Button Row
+                // Status Badge Row
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                        .clickable { onToggleStatus() }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -2155,7 +2118,7 @@ fun ProductDetailDialog(
                             )
                     )
                     Text(
-                        text = "สถานะ: ${product.status} (กดเพื่อเปลี่ยน)",
+                        text = "สถานะ: ${product.status}",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                         color = if (product.status == "Active") Color(0xFF2E7D32) else Color.Gray
                     )
@@ -2184,33 +2147,12 @@ fun ProductDetailDialog(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Actions row
-                Row(
+                Button(
+                    onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    shape = RoundedCornerShape(10.dp)
                 ) {
-                    // Delete Button
-                    Button(
-                        onClick = onDelete,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.errorContainer,
-                            contentColor = MaterialTheme.colorScheme.onErrorContainer
-                        ),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Icon(Icons.Default.Delete, "Delete", modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("ลบสินค้า", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
-
-                    // Done Button
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1.5f),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text("ปิดหน้านี้", fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
+                    Text("ปิดหน้านี้", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
