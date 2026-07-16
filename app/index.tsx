@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Dimensions,
@@ -34,6 +34,8 @@ interface Product {
   reviews: number;
 }
 
+// Initial Mock Data (Gunpla Kits)
+/*
 // Initial Mock Data (Gunpla Kits)
 const INITIAL_PRODUCTS: Product[] = [
   {
@@ -102,6 +104,7 @@ const INITIAL_PRODUCTS: Product[] = [
     reviews: 978,
   },
 ];
+*/
 
 export default function App() {
   return (
@@ -119,7 +122,37 @@ function MainApp() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // App Core States
-  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('https://raw.githubusercontent.com/TUNG-BANGBUATONG/app/refs/heads/main/productsGundam.json');//API
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const mappedProducts: Product[] = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          grade: item.grade as 'PG' | 'MG' | 'RG' | 'HG' | 'SD',
+          scale: item.scale,
+          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+          image: item.image_url || '',
+          isActive: item.badge_status === 'Active',
+          color: item.color || '#2563EB',
+          description: item.description || '',
+          rating: typeof item.rating === 'string' ? parseFloat(item.rating) : (item.rating || 0),
+          reviews: typeof item.reviews === 'string' ? parseInt(item.reviews, 10) : (item.reviews || 0),
+        }));
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'Home' | 'Add' | 'Products' | 'Categories'>('Home');
   const [filterCategory, setFilterCategory] = useState<'All' | 'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('All');
