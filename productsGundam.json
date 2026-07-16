@@ -1,0 +1,67 @@
+[
+    {
+        "id": "1",
+        "name": "TURN A GUNDAM MG",
+        "grade": "MG",
+        "scale": "1/60",
+        "price": 180.00,
+        "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwqF5wCKg-m8EXDx6tCAfnzCbg4qXIFG_dIgAVaPLXggCnO4mLrNZ4nI0&s=10",
+        "badge_status": "Active",
+        "color": "#DC2626",
+        "description": "The ultimate evolution of RX-78-2 Gundam featuring multi-layer inner frames, extensive metal parts, and a comprehensive LED system. Truly the pinnacle of Gunpla design.",
+        "rating": 5.0,
+        "reviews": 8712
+    },
+    {
+        "id": "2",
+        "name": "TURN A INGRESSAGUNDAM MILITARY GUNDAM MG",
+        "grade": "MG",
+        "scale": "1/60",
+        "price": 55.00,
+        "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-rNCQhR3UWI-Hey7TL_5WHjsAB8s65WssTv_Rz4YmOjXqCLtVoj7SepBK&s=10",
+        "badge_status": "Active",
+        "color": "#1E3A8A",
+        "description": "Featuring the highly detailed Gundam Frame, this MG kit boasts a massive mace, tail blade with wire, and extreme articulation to pose in wild, beast-like stances.",
+        "rating": 4.8,
+        "reviews": 4219
+    },
+    {
+        "id": "3",
+        "name": "FREEDOM GUNDAM MG",
+        "grade": "MG",
+        "scale": "1/60",
+        "price": 38.00,
+        "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTRCEZ0xvR23e7BlEwM-Ky9fGJIzZz8iov8XWgPtCi54Q&s=10",
+        "badge_status": "Active",
+        "color": "#2563EB",
+        "description": "From \"The Witch from Mercury\", this Real Grade kit offers unmatched detail density, color separation, and dynamic joint systems capturing the sleek look of the Aerial Rebuild.",
+        "rating": 4.9,
+        "reviews": 3105
+    },
+    {
+        "id": "4",
+        "name": "AKATSUKI GUNDAM MG",
+        "grade": "MG",
+        "scale": "1/60",
+        "price": 28.00,
+        "image_url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-h8duJWIDWaT3bycIRKQX-lOOj72pySI2PEweQmq9gBfcVju3ZEfpAzI&s=10",
+        "badge_status": "Out of stock",
+        "color": "#64748B",
+        "description": "Equipped with the psycho-frame test parts on its body, this high grade kit recreates the psycho-frame parts using beautiful clear pink runner pieces.",
+        "rating": 4.5,
+        "reviews": 1892
+    },
+    {
+        "id": "5",
+        "name": "CALIBANBARN GUNDAM MG",
+        "grade": "MG",
+        "scale": "1/60",
+        "price": 12.50,
+        "image_url": "https://o.lnwfile.com/_/o/_raw/cg/11/5y.jpg",
+        "badge_status": "Active",
+        "color": "#94A3B8",
+        "description": "A stylized Nu Gundam combining compact proportions with high weapon compatibility. Perfect for beginners and desk decoration.",
+        "rating": 4.6,
+        "reviews": 978
+    }
+]
