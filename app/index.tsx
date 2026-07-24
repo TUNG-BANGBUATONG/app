@@ -106,6 +106,8 @@ const INITIAL_PRODUCTS: Product[] = [
 ];
 */
 
+const API_URL = 'http://119.59.102.161:3040/api/products';
+
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -127,13 +129,14 @@ function MainApp() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('https://raw.githubusercontent.com/TUNG-BANGBUATONG/app/refs/heads/main/productsGundam.json');//API
+        // const response = await fetch('https://raw.githubusercontent.com/TUNG-BANGBUATONG/app/refs/heads/main/productsGundam.json');//API
+        const response = await fetch(API_URL);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         const mappedProducts: Product[] = data.map((item: any) => ({
-          id: item.id,
+          id: String(item.id),
           name: item.name,
           grade: item.grade as 'PG' | 'MG' | 'RG' | 'HG' | 'SD',
           scale: item.scale,
