@@ -13,6 +13,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,8 +27,8 @@ interface Product {
   grade: 'PG' | 'MG' | 'RG' | 'HG' | 'SD';
   scale: string;
   price: number;
-  image: string;
-  isActive: boolean;
+  image_url: string;
+  badge_status: 'Active' | 'Out of stock';
   color: string;
   description: string;
   rating: number;
@@ -126,35 +127,64 @@ function MainApp() {
   // App Core States
   const [products, setProducts] = useState<Product[]>([]);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // const response = await fetch('https://raw.githubusercontent.com/TUNG-BANGBUATONG/app/refs/heads/main/productsGundam.json');//API
-        const response = await fetch(API_URL);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        const mappedProducts: Product[] = data.map((item: any) => ({
-          id: String(item.id),
-          name: item.name,
-          grade: item.grade as 'PG' | 'MG' | 'RG' | 'HG' | 'SD',
-          scale: item.scale,
-          price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
-          image: item.image_url || '',
-          isActive: item.badge_status === 'Active',
-          color: item.color || '#2563EB',
-          description: item.description || '',
-          rating: typeof item.rating === 'string' ? parseFloat(item.rating) : (item.rating || 0),
-          reviews: typeof item.reviews === 'string' ? parseInt(item.reviews, 10) : (item.reviews || 0),
-        }));
-        setProducts(mappedProducts);
-      } catch (error) {
-        console.error('Error fetching products:', error);
+  // Reusable fetch products
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+      const data = await response.json();
+      const mappedProducts: Product[] = data.map((item: any) => ({
+        id: String(item.id),
+        name: item.name,
+        grade: item.grade as 'PG' | 'MG' | 'RG' | 'HG' | 'SD',
+        scale: item.scale,
+        price: typeof item.price === 'string' ? parseFloat(item.price) : item.price,
+        image_url: item.image_url || '',
+        badge_status: item.badge_status === 'Active' ? 'Active' : 'Out of stock',
+        color: item.color || '#2563EB',
+        description: item.description || '',
+        rating: typeof item.rating === 'string' ? parseFloat(item.rating) : (item.rating || 0),
+        reviews: typeof item.reviews === 'string' ? parseInt(item.reviews, 10) : (item.reviews || 0),
+      }));
+      setProducts(mappedProducts);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  };
+
+  useEffect(() => {
     fetchProducts();
   }, []);
+
+  // Fetch product by ID details
+  const viewProductDetails = async (id: string) => {
+    try {
+      const response = await fetch(`${API_URL}/${id}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      const mappedProduct: Product = {
+        id: String(data.id),
+        name: data.name,
+        grade: data.grade as 'PG' | 'MG' | 'RG' | 'HG' | 'SD',
+        scale: data.scale,
+        price: typeof data.price === 'string' ? parseFloat(data.price) : data.price,
+        image_url: data.image_url || '',
+        badge_status: data.badge_status === 'Active' ? 'Active' : 'Out of stock',
+        color: data.color || '#2563EB',
+        description: data.description || '',
+        rating: typeof data.rating === 'string' ? parseFloat(data.rating) : (data.rating || 0),
+        reviews: typeof data.reviews === 'string' ? parseInt(data.reviews, 10) : (data.reviews || 0),
+      };
+      setSelectedProduct(mappedProduct);
+    } catch (error) {
+      console.error('Error fetching product details:', error);
+      Alert.alert('Error', 'Could not load product details from server.');
+    }
+  };
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'Home' | 'Add' | 'Products' | 'Categories'>('Home');
@@ -166,8 +196,26 @@ function MainApp() {
   const [newProductName, setNewProductName] = useState<string>('');
   const [newProductPrice, setNewProductPrice] = useState<string>('');
   const [newProductGrade, setNewProductGrade] = useState<'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('HG');
+  const [newProductScale, setNewProductScale] = useState<string>('');
+  const [newProductImageUrl, setNewProductImageUrl] = useState<string>('');
+  const [newProductColor, setNewProductColor] = useState<string>('');
   const [newProductIsActive, setNewProductIsActive] = useState<boolean>(true);
   const [newProductDesc, setNewProductDesc] = useState<string>('');
+  const [newProductRating, setNewProductRating] = useState<string>('5.0');
+  const [newProductReviews, setNewProductReviews] = useState<string>('0');
+
+  // Edit Product States
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editProductName, setEditProductName] = useState<string>('');
+  const [editProductPrice, setEditProductPrice] = useState<string>('');
+  const [editProductGrade, setEditProductGrade] = useState<'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('HG');
+  const [editProductScale, setEditProductScale] = useState<string>('');
+  const [editProductImageUrl, setEditProductImageUrl] = useState<string>('');
+  const [editProductBadgeStatus, setEditProductBadgeStatus] = useState<'Active' | 'Out of stock'>('Active');
+  const [editProductColor, setEditProductColor] = useState<string>('');
+  const [editProductDesc, setEditProductDesc] = useState<string>('');
+  const [editProductRating, setEditProductRating] = useState<string>('5.0');
+  const [editProductReviews, setEditProductReviews] = useState<string>('0');
 
   // Simple Authentication Handler
   const handleLogin = () => {
@@ -191,7 +239,7 @@ function MainApp() {
   };
 
   // Add Product Handler
-  const handleAddProduct = () => {
+  const handleAddProduct = async () => {
     if (!newProductName.trim()) {
       Alert.alert('Validation Error', 'Please enter a product name.');
       return;
@@ -199,6 +247,16 @@ function MainApp() {
     const priceNum = parseFloat(newProductPrice);
     if (isNaN(priceNum) || priceNum <= 0) {
       Alert.alert('Validation Error', 'Please enter a valid price (greater than 0).');
+      return;
+    }
+    const ratingNum = parseFloat(newProductRating);
+    if (isNaN(ratingNum) || ratingNum < 0 || ratingNum > 5) {
+      Alert.alert('Validation Error', 'Please enter a valid rating between 0 and 5.');
+      return;
+    }
+    const reviewsNum = parseInt(newProductReviews, 10);
+    if (isNaN(reviewsNum) || reviewsNum < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid number of reviews.');
       return;
     }
 
@@ -218,60 +276,207 @@ function MainApp() {
       SD: 'SD',
     };
 
-    const emojis = ['🤖', '🚀', '⚡', '🛸', '✨', '🧸', '📦'];
-    const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const finalScale = newProductScale.trim() || gradeScales[newProductGrade] || '1/144';
+    const finalColor = newProductColor.trim() || gradeColors[newProductGrade] || '#2563EB';
 
-    const newProduct: Product = {
-      id: Date.now().toString(),
+    const payload = {
       name: newProductName.toUpperCase().trim(),
       grade: newProductGrade,
-      scale: gradeScales[newProductGrade],
+      scale: finalScale,
       price: priceNum,
-      image: randomEmoji,
-      isActive: newProductIsActive,
-      color: gradeColors[newProductGrade],
+      image_url: newProductImageUrl.trim() || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwqF5wCKg-m8EXDx6tCAfnzCbg4qXIFG_dIgAVaPLXggCnO4mLrNZ4nI0&s=10',
+      badge_status: newProductIsActive ? 'Active' : 'Out of stock',
+      color: finalColor,
       description: newProductDesc.trim() || `Authentic ${newProductGrade} scale model kit of the ${newProductName.trim()}. Easy assembly with premium runner molds.`,
-      rating: 5.0,
-      reviews: Math.floor(Math.random() * 200) + 1,
+      rating: ratingNum,
+      reviews: reviewsNum,
     };
 
-    setProducts([newProduct, ...products]);
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
-    // Reset Form
-    setNewProductName('');
-    setNewProductPrice('');
-    setNewProductGrade('HG');
-    setNewProductIsActive(true);
-    setNewProductDesc('');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-    Alert.alert('Success', 'Gunpla Model added to inventory!');
-    setActiveTab('Products');
-  };
+      Alert.alert('Success', 'Gunpla Model added to database successfully!');
+      
+      // Reset Form
+      setNewProductName('');
+      setNewProductPrice('');
+      setNewProductGrade('HG');
+      setNewProductScale('');
+      setNewProductImageUrl('');
+      setNewProductColor('');
+      setNewProductIsActive(true);
+      setNewProductDesc('');
+      setNewProductRating('5.0');
+      setNewProductReviews('0');
 
-  // Toggle Active Status
-  const toggleProductStatus = (id: string) => {
-    setProducts(
-      products.map((p) => (p.id === id ? { ...p, isActive: !p.isActive } : p))
-    );
-    if (selectedProduct && selectedProduct.id === id) {
-      setSelectedProduct({ ...selectedProduct, isActive: !selectedProduct.isActive });
+      // Refresh list
+      await fetchProducts();
+
+      setActiveTab('Products');
+    } catch (error) {
+      console.error('Error adding product:', error);
+      Alert.alert('Error', 'Could not add product to server.');
     }
   };
 
-  // Delete Product
+  // Start Edit Mode
+  const handleStartEdit = (product: Product) => {
+    setEditingProduct(product);
+    setEditProductName(product.name);
+    setEditProductPrice(String(product.price));
+    setEditProductGrade(product.grade);
+    setEditProductScale(product.scale);
+    setEditProductImageUrl(product.image_url);
+    setEditProductBadgeStatus(product.badge_status);
+    setEditProductColor(product.color);
+    setEditProductDesc(product.description);
+    setEditProductRating(String(product.rating));
+    setEditProductReviews(String(product.reviews));
+  };
+
+  // Submit Edit Handler
+  const handleUpdateProduct = async () => {
+    if (!editingProduct) return;
+
+    if (!editProductName.trim()) {
+      Alert.alert('Validation Error', 'Please enter a product name.');
+      return;
+    }
+    const priceNum = parseFloat(editProductPrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      Alert.alert('Validation Error', 'Please enter a valid price (greater than 0).');
+      return;
+    }
+    const ratingNum = parseFloat(editProductRating);
+    if (isNaN(ratingNum) || ratingNum < 0 || ratingNum > 5) {
+      Alert.alert('Validation Error', 'Please enter a valid rating between 0 and 5.');
+      return;
+    }
+    const reviewsNum = parseInt(editProductReviews, 10);
+    if (isNaN(reviewsNum) || reviewsNum < 0) {
+      Alert.alert('Validation Error', 'Please enter a valid number of reviews.');
+      return;
+    }
+
+    const payload = {
+      name: editProductName.toUpperCase().trim(),
+      grade: editProductGrade,
+      scale: editProductScale.trim() || '1/144',
+      price: priceNum,
+      image_url: editProductImageUrl.trim() || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwqF5wCKg-m8EXDx6tCAfnzCbg4qXIFG_dIgAVaPLXggCnO4mLrNZ4nI0&s=10',
+      badge_status: editProductBadgeStatus,
+      color: editProductColor.trim() || '#2563EB',
+      description: editProductDesc.trim(),
+      rating: ratingNum,
+      reviews: reviewsNum,
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      Alert.alert('Success', 'Gunpla Model updated successfully!');
+      setEditingProduct(null);
+
+      // Refresh list
+      await fetchProducts();
+
+      // Refresh Detail View if active
+      if (selectedProduct && selectedProduct.id === editingProduct.id) {
+        viewProductDetails(editingProduct.id);
+      }
+    } catch (error) {
+      console.error('Error updating product:', error);
+      Alert.alert('Error', 'Could not update product on the server.');
+    }
+  };
+
+  // Toggle Active Status via Server
+  const toggleProductStatus = async (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+
+    const newStatus = product.badge_status === 'Active' ? 'Out of stock' : 'Active';
+    const payload = {
+      name: product.name,
+      grade: product.grade,
+      scale: product.scale,
+      price: product.price,
+      image_url: product.image_url,
+      badge_status: newStatus,
+      color: product.color,
+      description: product.description,
+      rating: product.rating,
+      reviews: product.reviews,
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      setProducts(
+        products.map((p) => (p.id === id ? { ...p, badge_status: newStatus as 'Active' | 'Out of stock' } : p))
+      );
+      if (selectedProduct && selectedProduct.id === id) {
+        setSelectedProduct({ ...selectedProduct, badge_status: newStatus as 'Active' | 'Out of stock' });
+      }
+    } catch (error) {
+      console.error('Error toggling product status:', error);
+      Alert.alert('Error', 'Could not update status on server.');
+    }
+  };
+
+  // Delete Product via Server
   const deleteProduct = (id: string) => {
     Alert.alert(
       'Remove Product',
-      'Are you sure you want to remove this Gunpla kit?',
+      'Are you sure you want to remove this Gunpla kit from the backend database?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
           style: 'destructive',
-          onPress: () => {
-            setProducts(products.filter((p) => p.id !== id));
-            if (selectedProduct && selectedProduct.id === id) {
-              setSelectedProduct(null);
+          onPress: async () => {
+            try {
+              const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+              });
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              Alert.alert('Success', 'Product removed from database.');
+              await fetchProducts();
+
+              if (selectedProduct && selectedProduct.id === id) {
+                setSelectedProduct(null);
+              }
+            } catch (error) {
+              console.error('Error deleting product:', error);
+              Alert.alert('Error', 'Could not delete product from server.');
             }
           },
         },
@@ -284,7 +489,7 @@ function MainApp() {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.grade.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === 'All' || p.grade === filterCategory;
-    const matchesStatus = filterStatus === 'ALL' || (filterStatus === 'ACTIVE_ONLY' && p.isActive);
+    const matchesStatus = filterStatus === 'ALL' || (filterStatus === 'ACTIVE_ONLY' && p.badge_status === 'Active');
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
@@ -296,7 +501,7 @@ function MainApp() {
       grade,
       count: items.length,
       percentage,
-      activeCount: items.filter((p) => p.isActive).length,
+      activeCount: items.filter((p) => p.badge_status === 'Active').length,
     };
   });
 
@@ -366,32 +571,42 @@ function MainApp() {
       <SafeAreaView style={styles.detailContainer}>
         <StatusBar barStyle="dark-content" />
 
-        {/* Top Header Row with Back and Status toggle */}
+        {/* Top Header Row with Back, Edit and Status toggle */}
         <View style={styles.detailHeader}>
           <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedProduct(null)}>
             <Text style={styles.backBtnIcon}>←</Text>
           </TouchableOpacity>
           <Text style={styles.detailTitleText}>PRODUCT DETAILS</Text>
-          <TouchableOpacity
-            style={[
-              styles.detailStatusBadge,
-              { backgroundColor: selectedProduct.isActive ? '#D1FAE5' : '#FEE2E2' }
-            ]}
-            onPress={() => toggleProductStatus(selectedProduct.id)}
-          >
-            <Text style={[styles.detailStatusText, { color: selectedProduct.isActive ? '#10B981' : '#EF4444' }]}>
-              {selectedProduct.isActive ? 'Active' : 'Stocked Out'}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity
+              style={styles.editHeaderBtn}
+              onPress={() => {
+                handleStartEdit(selectedProduct);
+              }}
+            >
+              <Text style={styles.editHeaderBtnText}>✏️ Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.detailStatusBadge,
+                { backgroundColor: selectedProduct.badge_status === 'Active' ? '#D1FAE5' : '#FEE2E2' }
+              ]}
+              onPress={() => toggleProductStatus(selectedProduct.id)}
+            >
+              <Text style={[styles.detailStatusText, { color: selectedProduct.badge_status === 'Active' ? '#10B981' : '#EF4444' }]}>
+                {selectedProduct.badge_status === 'Active' ? 'Active' : 'Stocked Out'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Main Hero Product Image with colored background box */}
           <View style={[styles.detailHeroImageBg, { backgroundColor: selectedProduct.color }]}>
-            {selectedProduct.image.startsWith('http') ? (
-              <Image source={{ uri: selectedProduct.image }} style={styles.detailHeroImage} />
+            {selectedProduct.image_url.startsWith('http') ? (
+              <Image source={{ uri: selectedProduct.image_url }} style={styles.detailHeroImage} />
             ) : (
-              <Text style={styles.detailHeroEmoji}>{selectedProduct.image}</Text>
+              <Text style={styles.detailHeroEmoji}>{selectedProduct.image_url}</Text>
             )}
           </View>
 
@@ -450,18 +665,18 @@ function MainApp() {
         {/* Floating bottom add button matching Reebok App */}
         <View style={styles.detailBottomBar}>
           <TouchableOpacity
-            style={[styles.addToBagBtn, { backgroundColor: selectedProduct.isActive ? '#3CE0B0' : '#8D93A3' }]}
+            style={[styles.addToBagBtn, { backgroundColor: selectedProduct.badge_status === 'Active' ? '#3CE0B0' : '#8D93A3' }]}
             onPress={() => {
               Alert.alert(
-                selectedProduct.isActive ? 'Purchase Simulated' : 'Out of Stock',
-                selectedProduct.isActive
+                selectedProduct.badge_status === 'Active' ? 'Purchase Simulated' : 'Out of Stock',
+                selectedProduct.badge_status === 'Active'
                   ? `Simulating Gundam purchase of ${selectedProduct.name}!`
                   : `This Gundam is currently stocked out.`
               );
             }}
           >
             <Text style={styles.addToBagBtnText}>
-              {selectedProduct.isActive ? '+ ADD TO BAG' : 'STOCKED OUT'}
+              {selectedProduct.badge_status === 'Active' ? '+ ADD TO BAG' : 'STOCKED OUT'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -585,7 +800,7 @@ function MainApp() {
                 style={styles.heroBtn}
                 onPress={() => {
                   const pgKit = products.find(p => p.grade === 'PG');
-                  if (pgKit) setSelectedProduct(pgKit);
+                  if (pgKit) viewProductDetails(pgKit.id);
                 }}
               >
                 <Text style={styles.heroBtnText}>➜</Text>
@@ -601,13 +816,13 @@ function MainApp() {
               </View>
               <View style={styles.statsCard}>
                 <Text style={styles.statsNumber}>
-                  {products.filter((p) => p.isActive).length}
+                  {products.filter((p) => p.badge_status === 'Active').length}
                 </Text>
                 <Text style={styles.statsLabel}>Active</Text>
               </View>
               <View style={styles.statsCard}>
                 <Text style={styles.statsNumber}>
-                  {products.filter((p) => !p.isActive).length}
+                  {products.filter((p) => p.badge_status !== 'Active').length}
                 </Text>
                 <Text style={styles.statsLabel}>Stock Out</Text>
               </View>
@@ -631,21 +846,21 @@ function MainApp() {
                 <TouchableOpacity
                   key={item.id}
                   style={styles.featuredCard}
-                  onPress={() => setSelectedProduct(item)}
+                  onPress={() => viewProductDetails(item.id)}
                 >
                   {/* Styled Image background with Reebok colored corner style */}
                   <View style={[styles.featuredImageBg, { backgroundColor: item.color }]}>
-                    {item.image.startsWith('http') ? (
-                      <Image source={{ uri: item.image }} style={styles.featuredImage} />
+                    {item.image_url.startsWith('http') ? (
+                      <Image source={{ uri: item.image_url }} style={styles.featuredImage} />
                     ) : (
-                      <Text style={styles.featuredEmoji}>{item.image}</Text>
+                      <Text style={styles.featuredEmoji}>{item.image_url}</Text>
                     )}
                     {/* Reebok Style White floating Add icon on corner */}
                     <TouchableOpacity
                       style={styles.cardAddButtonFloat}
                       onPress={() => toggleProductStatus(item.id)}
                     >
-                      <Text style={styles.cardAddButtonFloatText}>{item.isActive ? '✓' : '+'}</Text>
+                      <Text style={styles.cardAddButtonFloatText}>{item.badge_status === 'Active' ? '✓' : '+'}</Text>
                     </TouchableOpacity>
                   </View>
 
@@ -700,14 +915,14 @@ function MainApp() {
                   <TouchableOpacity
                     key={item.id}
                     style={styles.productCard}
-                    onPress={() => setSelectedProduct(item)}
+                    onPress={() => viewProductDetails(item.id)}
                   >
                     {/* Visual Card Image with gradient styling */}
                     <View style={[styles.productImageContainer, { backgroundColor: item.color }]}>
-                      {item.image.startsWith('http') ? (
-                        <Image source={{ uri: item.image }} style={styles.productImage} />
+                      {item.image_url.startsWith('http') ? (
+                        <Image source={{ uri: item.image_url }} style={styles.productImage} />
                       ) : (
-                        <Text style={styles.productEmoji}>{item.image}</Text>
+                        <Text style={styles.productEmoji}>{item.image_url}</Text>
                       )}
                       <View style={styles.gradeBadgeOverlay}>
                         <Text style={styles.gradeBadgeText}>{item.grade}</Text>
@@ -726,24 +941,30 @@ function MainApp() {
                         <View
                           style={[
                             styles.statusIndicator,
-                            { backgroundColor: item.isActive ? '#3CE0B0' : '#EF4444' },
+                            { backgroundColor: item.badge_status === 'Active' ? '#3CE0B0' : '#EF4444' },
                           ]}
                         />
                         <Text style={styles.statusText}>
-                          {item.isActive ? 'Active' : 'Stocked Out'}
+                          {item.badge_status === 'Active' ? 'Active' : 'Stocked Out'}
                         </Text>
                         <Switch
                           trackColor={{ false: '#D1D5DB', true: '#C6F6E5' }}
-                          thumbColor={item.isActive ? '#3CE0B0' : '#9CA3AF'}
+                          thumbColor={item.badge_status === 'Active' ? '#3CE0B0' : '#9CA3AF'}
                           onValueChange={() => toggleProductStatus(item.id)}
-                          value={item.isActive}
+                          value={item.badge_status === 'Active'}
                           style={styles.statusSwitch}
                         />
                       </View>
                     </View>
 
-                    {/* Action buttons (Delete) */}
+                    {/* Action buttons (Edit & Delete) */}
                     <View style={styles.productActions}>
+                      <TouchableOpacity
+                        style={[styles.deleteBtn, { marginBottom: 8 }]}
+                        onPress={() => handleStartEdit(item)}
+                      >
+                        <Text style={styles.deleteBtnText}>✏️</Text>
+                      </TouchableOpacity>
                       <TouchableOpacity
                         style={styles.deleteBtn}
                         onPress={() => deleteProduct(item.id)}
@@ -788,6 +1009,63 @@ function MainApp() {
                   placeholderTextColor="#A0A8BA"
                   value={newProductPrice}
                   onChangeText={setNewProductPrice}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>SCALE</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g. 1/144 (Leave empty for default)"
+                  placeholderTextColor="#A0A8BA"
+                  value={newProductScale}
+                  onChangeText={setNewProductScale}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>IMAGE URL</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g. https://..."
+                  placeholderTextColor="#A0A8BA"
+                  value={newProductImageUrl}
+                  onChangeText={setNewProductImageUrl}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>COLOR HEX CODE</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g. #2563EB (Leave empty for default)"
+                  placeholderTextColor="#A0A8BA"
+                  value={newProductColor}
+                  onChangeText={setNewProductColor}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>RATING (0.0 - 5.0)</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g. 5.0"
+                  placeholderTextColor="#A0A8BA"
+                  value={newProductRating}
+                  onChangeText={setNewProductRating}
+                  keyboardType="numeric"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>REVIEWS COUNT</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="e.g. 120"
+                  placeholderTextColor="#A0A8BA"
+                  value={newProductReviews}
+                  onChangeText={setNewProductReviews}
                   keyboardType="numeric"
                 />
               </View>
@@ -962,6 +1240,185 @@ function MainApp() {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        visible={editingProduct !== null}
+        animationType="slide"
+        onRequestClose={() => setEditingProduct(null)}
+      >
+        <SafeAreaView style={styles.modalSafeArea}>
+          <StatusBar barStyle="dark-content" />
+          <View style={styles.modalHeader}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => setEditingProduct(null)}>
+              <Text style={styles.backBtnIcon}>✕</Text>
+            </TouchableOpacity>
+            <Text style={styles.detailTitleText}>EDIT GUNDAM MODEL</Text>
+            <View style={{ width: 36 }} />
+          </View>
+
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+          >
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollView}>
+              <View style={styles.addFormContainer}>
+                
+                {/* Form Input fields */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>GUNPLA MODEL NAME</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. GUNDAM EXIA"
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductName}
+                    onChangeText={setEditProductName}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>PRICE (USD)</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. 45.00"
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductPrice}
+                    onChangeText={setEditProductPrice}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>SCALE</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. 1/144"
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductScale}
+                    onChangeText={setEditProductScale}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>IMAGE URL</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. https://..."
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductImageUrl}
+                    onChangeText={setEditProductImageUrl}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>COLOR HEX CODE</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. #2563EB"
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductColor}
+                    onChangeText={setEditProductColor}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>RATING (0.0 - 5.0)</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. 4.8"
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductRating}
+                    onChangeText={setEditProductRating}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>REVIEWS COUNT</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    placeholder="e.g. 120"
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductReviews}
+                    onChangeText={setEditProductReviews}
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>KIT DESCRIPTION</Text>
+                  <TextInput
+                    style={[styles.formInput, styles.formInputArea]}
+                    placeholder="Enter details..."
+                    placeholderTextColor="#A0A8BA"
+                    value={editProductDesc}
+                    onChangeText={setEditProductDesc}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+
+                {/* Grade Selection */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>GUNPLA GRADE CATEGORY</Text>
+                  <View style={styles.gradeGrid}>
+                    {(['PG', 'MG', 'RG', 'HG', 'SD'] as const).map((g) => (
+                      <TouchableOpacity
+                        key={g}
+                        style={[
+                          styles.gradeSelectBtn,
+                          editProductGrade === g && styles.gradeSelectBtnActive,
+                        ]}
+                        onPress={() => setEditProductGrade(g)}
+                      >
+                        <Text
+                          style={[
+                            styles.gradeSelectBtnText,
+                            editProductGrade === g && styles.gradeSelectBtnTextActive,
+                          ]}
+                        >
+                          {g}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Status Selection */}
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>BADGE STATUS</Text>
+                  <View style={styles.gradeGrid}>
+                    {(['Active', 'Out of stock'] as const).map((status) => (
+                      <TouchableOpacity
+                        key={status}
+                        style={[
+                          styles.gradeSelectBtn,
+                          editProductBadgeStatus === status && styles.gradeSelectBtnActive,
+                        ]}
+                        onPress={() => setEditProductBadgeStatus(status)}
+                      >
+                        <Text
+                          style={[
+                            styles.gradeSelectBtnText,
+                            editProductBadgeStatus === status && styles.gradeSelectBtnTextActive,
+                          ]}
+                        >
+                          {status === 'Active' ? 'Active' : 'Stocked Out'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Save button */}
+                <TouchableOpacity style={styles.formSubmitBtn} onPress={handleUpdateProduct}>
+                  <Text style={styles.formSubmitBtnText}>SAVE CHANGES</Text>
+                </TouchableOpacity>
+
+              </View>
+            </ScrollView>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
 
     </SafeAreaView>
   );
@@ -2055,5 +2512,35 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     letterSpacing: 1,
+  },
+  editHeaderBtn: {
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  editHeaderBtnText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1A1D24',
+  },
+  modalSafeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  modalScrollView: {
+    flex: 1,
+    padding: 16,
   },
 });
