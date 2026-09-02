@@ -4,18 +4,17 @@ import {
   Dimensions,
   Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   StatusBar,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Modal,
+  View
 } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Dimensions helper for layout
 const { width } = Dimensions.get('window');
@@ -118,11 +117,16 @@ export default function App() {
 }
 
 function MainApp() {
+  const insets = useSafeAreaInsets();
   // Navigation / Login / View Details States
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isRegistering, setIsRegistering] = useState<boolean>(false);
+  const [user, setUser] = useState<{ id: number; username: string } | null>(null);
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const isAdmin = user?.username === 'admin';
 
   // App Core States
   const [products, setProducts] = useState<Product[]>([]);
@@ -189,7 +193,6 @@ function MainApp() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'Home' | 'Add' | 'Products' | 'Categories'>('Home');
   const [filterCategory, setFilterCategory] = useState<'All' | 'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('All');
-  const [filterStatus, setFilterStatus] = useState<'ALL' | 'ACTIVE_ONLY'>('ALL');
   const [selectedScale, setSelectedScale] = useState<string>('1/144');
 
   // Add Product Form States
@@ -199,7 +202,6 @@ function MainApp() {
   const [newProductScale, setNewProductScale] = useState<string>('');
   const [newProductImageUrl, setNewProductImageUrl] = useState<string>('');
   const [newProductColor, setNewProductColor] = useState<string>('');
-  const [newProductIsActive, setNewProductIsActive] = useState<boolean>(true);
   const [newProductDesc, setNewProductDesc] = useState<string>('');
   const [newProductRating, setNewProductRating] = useState<string>('5.0');
   const [newProductReviews, setNewProductReviews] = useState<string>('0');
@@ -211,30 +213,83 @@ function MainApp() {
   const [editProductGrade, setEditProductGrade] = useState<'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('HG');
   const [editProductScale, setEditProductScale] = useState<string>('');
   const [editProductImageUrl, setEditProductImageUrl] = useState<string>('');
-  const [editProductBadgeStatus, setEditProductBadgeStatus] = useState<'Active' | 'Out of stock'>('Active');
   const [editProductColor, setEditProductColor] = useState<string>('');
   const [editProductDesc, setEditProductDesc] = useState<string>('');
   const [editProductRating, setEditProductRating] = useState<string>('5.0');
   const [editProductReviews, setEditProductReviews] = useState<string>('0');
 
-  // Simple Authentication Handler
-  const handleLogin = () => {
-    if (username.trim().toLowerCase() === 'admin' && password === 'admin') {
+  // Web-safe Alert
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
+  // Authentication Handlers
+  const handleLogin = async () => {
+    if (!username.trim() || !password.trim()) {
+      showAlert('Error', 'Please enter both username and password.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://119.59.102.161:3040/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.user) {
+        showAlert('Authentication Failed', data.message || 'Invalid username or password.');
+        return;
+      }
+
+      setUser(data.user);
       setIsLoggedIn(true);
       setUsername('');
       setPassword('');
-    } else {
-      Alert.alert(
-        'Authentication Failed',
-        'Please use admin / admin credentials to log in.',
-        [{ text: 'OK' }]
-      );
+      setActiveTab('Home'); // Default view
+    } catch (error) {
+      console.error('Login error:', error);
+      showAlert('Error', 'Could not connect to the server.');
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!username.trim() || !password.trim()) {
+      showAlert('Error', 'Please enter both username and password.');
+      return;
+    }
+
+    try {
+      const response = await fetch('http://119.59.102.161:3040/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim(), password }),
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        showAlert('Registration Failed', data.message || 'Could not register.');
+        return;
+      }
+
+      showAlert('Success', data.message || 'Registered successfully! Please login.');
+      setIsRegistering(false);
+      setPassword('');
+    } catch (error) {
+      console.error('Registration error:', error);
+      showAlert('Error', 'Could not connect to the server.');
     }
   };
 
   // Logout Handler
   const handleLogout = () => {
     setIsLoggedIn(false);
+    setUser(null);
     setSelectedProduct(null);
   };
 
@@ -285,7 +340,7 @@ function MainApp() {
       scale: finalScale,
       price: priceNum,
       image_url: newProductImageUrl.trim() || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwqF5wCKg-m8EXDx6tCAfnzCbg4qXIFG_dIgAVaPLXggCnO4mLrNZ4nI0&s=10',
-      badge_status: newProductIsActive ? 'Active' : 'Out of stock',
+      badge_status: 'Active',
       color: finalColor,
       description: newProductDesc.trim() || `Authentic ${newProductGrade} scale model kit of the ${newProductName.trim()}. Easy assembly with premium runner molds.`,
       rating: ratingNum,
@@ -304,7 +359,7 @@ function MainApp() {
       }
 
       Alert.alert('Success', 'Gunpla Model added to database successfully!');
-      
+
       // Reset Form
       setNewProductName('');
       setNewProductPrice('');
@@ -312,7 +367,6 @@ function MainApp() {
       setNewProductScale('');
       setNewProductImageUrl('');
       setNewProductColor('');
-      setNewProductIsActive(true);
       setNewProductDesc('');
       setNewProductRating('5.0');
       setNewProductReviews('0');
@@ -335,7 +389,6 @@ function MainApp() {
     setEditProductGrade(product.grade);
     setEditProductScale(product.scale);
     setEditProductImageUrl(product.image_url);
-    setEditProductBadgeStatus(product.badge_status);
     setEditProductColor(product.color);
     setEditProductDesc(product.description);
     setEditProductRating(String(product.rating));
@@ -372,7 +425,7 @@ function MainApp() {
       scale: editProductScale.trim() || '1/144',
       price: priceNum,
       image_url: editProductImageUrl.trim() || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwqF5wCKg-m8EXDx6tCAfnzCbg4qXIFG_dIgAVaPLXggCnO4mLrNZ4nI0&s=10',
-      badge_status: editProductBadgeStatus,
+      badge_status: 'Active',
       color: editProductColor.trim() || '#2563EB',
       description: editProductDesc.trim(),
       rating: ratingNum,
@@ -489,8 +542,7 @@ function MainApp() {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.grade.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = filterCategory === 'All' || p.grade === filterCategory;
-    const matchesStatus = filterStatus === 'ALL' || (filterStatus === 'ACTIVE_ONLY' && p.badge_status === 'Active');
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesCategory;
   });
 
   // Calculate stats for Categories / Dashboard
@@ -521,7 +573,9 @@ function MainApp() {
                 style={styles.logoImage}
               />
               <Text style={styles.loginTitle}>GUNPLA BASE</Text>
-              <Text style={styles.loginSubtitle}>Gunpla E-commerce Manager</Text>
+              <Text style={styles.loginSubtitle}>
+                {isRegistering ? 'Register New Account' : 'Gunpla E-commerce Manager'}
+              </Text>
             </View>
 
             <View style={styles.inputContainer}>
@@ -549,16 +603,32 @@ function MainApp() {
               />
             </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-              <Text style={styles.loginButtonText}>LAUNCH STATION</Text>
+            <TouchableOpacity
+              style={styles.loginButton}
+              onPress={isRegistering ? handleRegister : handleLogin}
+            >
+              <Text style={styles.loginButtonText}>
+                {isRegistering ? 'REGISTER ACCOUNT' : 'LAUNCH STATION'}
+              </Text>
             </TouchableOpacity>
 
-            <View style={styles.credentialTip}>
-              <Text style={styles.tipTitle}>💡 Quick Login Instructions</Text>
-              <Text style={styles.tipText}>
-                Use: <Text style={styles.boldText}>admin</Text> / Password: <Text style={styles.boldText}>admin</Text>
+            <TouchableOpacity
+              style={{ marginTop: 16, alignItems: 'center' }}
+              onPress={() => setIsRegistering(!isRegistering)}
+            >
+              <Text style={{ color: '#2563EB', fontSize: 13, fontWeight: '600' }}>
+                {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
               </Text>
-            </View>
+            </TouchableOpacity>
+
+            {!isRegistering && (
+              <View style={styles.credentialTip}>
+                <Text style={styles.tipTitle}>💡 Admin Instructions</Text>
+                <Text style={styles.tipText}>
+                  Admin Use: <Text style={styles.boldText}>admin</Text> / <Text style={styles.boldText}>123456</Text>
+                </Text>
+              </View>
+            )}
           </View>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -577,27 +647,7 @@ function MainApp() {
             <Text style={styles.backBtnIcon}>←</Text>
           </TouchableOpacity>
           <Text style={styles.detailTitleText}>PRODUCT DETAILS</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <TouchableOpacity
-              style={styles.editHeaderBtn}
-              onPress={() => {
-                handleStartEdit(selectedProduct);
-              }}
-            >
-              <Text style={styles.editHeaderBtnText}>✏️ Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.detailStatusBadge,
-                { backgroundColor: selectedProduct.badge_status === 'Active' ? '#D1FAE5' : '#FEE2E2' }
-              ]}
-              onPress={() => toggleProductStatus(selectedProduct.id)}
-            >
-              <Text style={[styles.detailStatusText, { color: selectedProduct.badge_status === 'Active' ? '#10B981' : '#EF4444' }]}>
-                {selectedProduct.badge_status === 'Active' ? 'Active' : 'Stocked Out'}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <View style={{ width: 36 }} />
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
@@ -619,8 +669,8 @@ function MainApp() {
 
             {/* Rating Stars row */}
             <View style={styles.detailRatingRow}>
-              <Text style={styles.starsText}>⭐️⭐️⭐️⭐️⭐️</Text>
-              <Text style={styles.reviewsCountText}>{selectedProduct.rating.toFixed(1)} ({selectedProduct.reviews.toLocaleString()} Reviews)</Text>
+              <Text style={styles.starsText}>Rating: {selectedProduct.rating.toFixed(1)} / 5.0</Text>
+              <Text style={styles.reviewsCountText}>({selectedProduct.reviews.toLocaleString()} Reviews)</Text>
             </View>
 
             {/* Description */}
@@ -662,22 +712,23 @@ function MainApp() {
           </View>
         </ScrollView>
 
-        {/* Floating bottom add button matching Reebok App */}
+        {/* Floating bottom buy button */}
         <View style={styles.detailBottomBar}>
           <TouchableOpacity
-            style={[styles.addToBagBtn, { backgroundColor: selectedProduct.badge_status === 'Active' ? '#3CE0B0' : '#8D93A3' }]}
+            style={[styles.addToBagBtn, { backgroundColor: '#3CE0B0' }]}
             onPress={() => {
-              Alert.alert(
-                selectedProduct.badge_status === 'Active' ? 'Purchase Simulated' : 'Out of Stock',
-                selectedProduct.badge_status === 'Active'
-                  ? `Simulating Gundam purchase of ${selectedProduct.name}!`
-                  : `This Gundam is currently stocked out.`
+              showAlert(
+                'Purchase Successful',
+                `You have successfully bought ${selectedProduct.name}!`
               );
+              if (!isAdmin) {
+                // Mock purchase: remove from state for users
+                setProducts(products.filter(p => p.id !== selectedProduct.id));
+              }
+              setSelectedProduct(null);
             }}
           >
-            <Text style={styles.addToBagBtnText}>
-              {selectedProduct.badge_status === 'Active' ? '+ ADD TO BAG' : 'STOCKED OUT'}
-            </Text>
+            <Text style={styles.addToBagBtnText}>BUY NOW</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -686,7 +737,7 @@ function MainApp() {
 
   // RENDER APP MAIN SCREEN (Reebok style list and UI flow)
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
       {/* 1. HEADER (Explore title on Left, profile avatar on Right) */}
@@ -703,137 +754,79 @@ function MainApp() {
           </View>
         </View>
 
-        {/* Search Bar / Add Button row */}
-        <View style={styles.searchBarRow}>
-          <View style={styles.searchContainer}>
-            <Text style={styles.searchIcon}>🔍</Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search Gunpla models..."
-              placeholderTextColor="#A0A8BA"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-            />
-          </View>
+        {/* Search Bar / Add Button row (Hide on Add Tab) */}
+        {activeTab !== 'Add' && (
+          <>
+            <View style={styles.searchBarRow}>
+              <View style={styles.searchContainer}>
+                <Text style={styles.searchIcon}>🔍</Text>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search Gunpla models..."
+                  placeholderTextColor="#A0A8BA"
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
 
-          {/* Quick Add Shortcut */}
-          <TouchableOpacity style={styles.headerAddBtn} onPress={() => setActiveTab('Add')}>
-            <Text style={styles.headerAddBtnText}>+ Add</Text>
-          </TouchableOpacity>
-        </View>
+              {/* Quick Add Shortcut */}
+              {isAdmin && (
+                <TouchableOpacity style={styles.headerAddBtn} onPress={() => setActiveTab('Add')}>
+                  <Text style={styles.headerAddBtnText}>+ Add</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-        {/* Categories Quick Filter Pill list (Reebok Explore circle shape styling) */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterPillList}
-          contentContainerStyle={styles.filterPillListContent}
-        >
-          {(['All', 'PG', 'MG', 'RG', 'HG', 'SD'] as const).map((cat) => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.filterPill,
-                filterCategory === cat && styles.filterPillActive,
-              ]}
-              onPress={() => setFilterCategory(cat)}
+            {/* Categories Quick Filter Pill list */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.filterPillList}
+              contentContainerStyle={styles.filterPillListContent}
             >
-              <Text style={styles.filterPillIcon}>
-                {cat === 'All' && '🤖'}
-                {cat === 'PG' && '🏆'}
-                {cat === 'MG' && '🛡️'}
-                {cat === 'RG' && '⚔️'}
-                {cat === 'HG' && '✈️'}
-                {cat === 'SD' && '🧸'}
-              </Text>
-              <Text
-                style={[
-                  styles.filterPillText,
-                  filterCategory === cat && styles.filterPillTextActive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+              {(['All', 'PG', 'MG', 'RG', 'HG', 'SD'] as const).map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.filterPill,
+                    filterCategory === cat && styles.filterPillActive,
+                  ]}
+                  onPress={() => setFilterCategory(cat)}
+                >
+                  <Text style={styles.filterPillIcon}>
+                    {cat === 'All' && '🤖'}
+                    {cat === 'PG' && '🏆'}
+                    {cat === 'MG' && '🛡️'}
+                    {cat === 'RG' && '⚔️'}
+                    {cat === 'HG' && '✈️'}
+                    {cat === 'SD' && '🧸'}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.filterPillText,
+                      filterCategory === cat && styles.filterPillTextActive,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
 
-        {/* Gender style Segmented Control: ALL KITS / ACTIVE ONLY */}
-        <View style={styles.segmentedControlContainer}>
-          <TouchableOpacity
-            style={[styles.segmentBtn, filterStatus === 'ALL' && styles.segmentBtnActive]}
-            onPress={() => setFilterStatus('ALL')}
-          >
-            <Text style={[styles.segmentBtnText, filterStatus === 'ALL' && styles.segmentBtnTextActive]}>
-              ALL KITS
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.segmentBtn, filterStatus === 'ACTIVE_ONLY' && styles.segmentBtnActive]}
-            onPress={() => setFilterStatus('ACTIVE_ONLY')}
-          >
-            <Text style={[styles.segmentBtnText, filterStatus === 'ACTIVE_ONLY' && styles.segmentBtnTextActive]}>
-              ACTIVE ONLY
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {/* Removed Segmented Control */}
       </View>
 
       {/* 2. BODY CONTENT AREA */}
       <View style={styles.body}>
 
-        {/* --- HOME TAB VIEW (Reebok App Sports Section Grid) --- */}
+        {/* --- HOME TAB VIEW (Explore) --- */}
         {activeTab === 'Home' && (
           <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
 
-            {/* Banner/Hero element */}
-            <View style={styles.heroCard}>
-              <View style={styles.heroTextContent}>
-                <Text style={styles.heroBadge}>🔥 MUST HAVE</Text>
-                <Text style={styles.heroTitle}>PG UNLEASHED</Text>
-                <Text style={styles.heroDesc}>
-                  Multi-layer frames & LEDs. The zenith of model technology.
-                </Text>
-                <Text style={styles.heroPrice}>$180.00</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.heroBtn}
-                onPress={() => {
-                  const pgKit = products.find(p => p.grade === 'PG');
-                  if (pgKit) viewProductDetails(pgKit.id);
-                }}
-              >
-                <Text style={styles.heroBtnText}>➜</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Quick Stats Panel */}
-            <Text style={styles.sectionTitle}>COMMAND STATS</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statsCard}>
-                <Text style={styles.statsNumber}>{products.length}</Text>
-                <Text style={styles.statsLabel}>Total Kits</Text>
-              </View>
-              <View style={styles.statsCard}>
-                <Text style={styles.statsNumber}>
-                  {products.filter((p) => p.badge_status === 'Active').length}
-                </Text>
-                <Text style={styles.statsLabel}>Active</Text>
-              </View>
-              <View style={styles.statsCard}>
-                <Text style={styles.statsNumber}>
-                  {products.filter((p) => p.badge_status !== 'Active').length}
-                </Text>
-                <Text style={styles.statsLabel}>Stock Out</Text>
-              </View>
-            </View>
-
-            {/* Featured Horizontal Scroll List (Sports section like Reebok App) */}
             <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>SPORTS RELEASES</Text>
-              <TouchableOpacity onPress={() => setActiveTab('Products')}>
-                <Text style={styles.seeAllLink}>MORE ➜</Text>
-              </TouchableOpacity>
+              <Text style={styles.sectionTitle}>EXPLORE RELEASES</Text>
             </View>
 
             <ScrollView
@@ -842,7 +835,7 @@ function MainApp() {
               style={styles.featuredScrollView}
               contentContainerStyle={styles.featuredContentStyle}
             >
-              {products.slice(0, 4).map((item) => (
+              {filteredProducts.map((item) => (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.featuredCard}
@@ -855,20 +848,13 @@ function MainApp() {
                     ) : (
                       <Text style={styles.featuredEmoji}>{item.image_url}</Text>
                     )}
-                    {/* Reebok Style White floating Add icon on corner */}
-                    <TouchableOpacity
-                      style={styles.cardAddButtonFloat}
-                      onPress={() => toggleProductStatus(item.id)}
-                    >
-                      <Text style={styles.cardAddButtonFloatText}>{item.badge_status === 'Active' ? '✓' : '+'}</Text>
-                    </TouchableOpacity>
                   </View>
 
                   {/* Product Details under image */}
                   <Text style={styles.featuredPrice}>${item.price.toFixed(0)}</Text>
 
                   <View style={styles.featuredRatingRow}>
-                    <Text style={styles.featuredStars}>⭐⭐⭐⭐⭐</Text>
+                    <Text style={styles.featuredStars}>Rating: {item.rating.toFixed(1)} / 5.0</Text>
                   </View>
 
                   <Text style={styles.featuredName} numberOfLines={1}>
@@ -903,7 +889,6 @@ function MainApp() {
                   onPress={() => {
                     setSearchQuery('');
                     setFilterCategory('All');
-                    setFilterStatus('ALL');
                   }}
                 >
                   <Text style={styles.clearFilterBtnText}>Reset Filters</Text>
@@ -935,43 +920,25 @@ function MainApp() {
                         {item.name}
                       </Text>
                       <Text style={styles.productCardPrice}>${item.price.toFixed(2)}</Text>
-
-                      {/* Active Status controls */}
-                      <View style={styles.statusToggleRow}>
-                        <View
-                          style={[
-                            styles.statusIndicator,
-                            { backgroundColor: item.badge_status === 'Active' ? '#3CE0B0' : '#EF4444' },
-                          ]}
-                        />
-                        <Text style={styles.statusText}>
-                          {item.badge_status === 'Active' ? 'Active' : 'Stocked Out'}
-                        </Text>
-                        <Switch
-                          trackColor={{ false: '#D1D5DB', true: '#C6F6E5' }}
-                          thumbColor={item.badge_status === 'Active' ? '#3CE0B0' : '#9CA3AF'}
-                          onValueChange={() => toggleProductStatus(item.id)}
-                          value={item.badge_status === 'Active'}
-                          style={styles.statusSwitch}
-                        />
-                      </View>
                     </View>
 
                     {/* Action buttons (Edit & Delete) */}
-                    <View style={styles.productActions}>
-                      <TouchableOpacity
-                        style={[styles.deleteBtn, { marginBottom: 8 }]}
-                        onPress={() => handleStartEdit(item)}
-                      >
-                        <Text style={styles.deleteBtnText}>✏️</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.deleteBtn}
-                        onPress={() => deleteProduct(item.id)}
-                      >
-                        <Text style={styles.deleteBtnText}>🗑️</Text>
-                      </TouchableOpacity>
-                    </View>
+                    {isAdmin && (
+                      <View style={styles.productActions}>
+                        <TouchableOpacity
+                          style={[styles.deleteBtn, { marginBottom: 8 }]}
+                          onPress={() => handleStartEdit(item)}
+                        >
+                          <Text style={styles.deleteBtnText}>✏️</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.deleteBtn}
+                          onPress={() => deleteProduct(item.id)}
+                        >
+                          <Text style={styles.deleteBtnText}>🗑️</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </TouchableOpacity>
                 ))}
                 <View style={{ height: 40 }} />
@@ -1108,23 +1075,6 @@ function MainApp() {
                   ))}
                 </View>
               </View>
-
-              {/* Status Switch row */}
-              <View style={styles.formSwitchRow}>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.formLabel}>IMMEDIATE LISTING STATUS</Text>
-                  <Text style={styles.formSwitchDesc}>
-                    Make this model active and purchasable immediately.
-                  </Text>
-                </View>
-                <Switch
-                  trackColor={{ false: '#D1D5DB', true: '#C6F6E5' }}
-                  thumbColor={newProductIsActive ? '#3CE0B0' : '#9CA3AF'}
-                  onValueChange={setNewProductIsActive}
-                  value={newProductIsActive}
-                />
-              </View>
-
               {/* Submit button */}
               <TouchableOpacity style={styles.formSubmitBtn} onPress={handleAddProduct}>
                 <Text style={styles.formSubmitBtnText}>DEPLOY TO CATALOG</Text>
@@ -1199,47 +1149,41 @@ function MainApp() {
       </View>
 
       {/* 3. BOTTOM NAVIGATION (Reebok style menu layout) */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setActiveTab('Home')}
-        >
-          <Text style={[styles.navIcon, activeTab === 'Home' && styles.navIconActiveColor]}>🏠</Text>
-          <Text style={[styles.navText, activeTab === 'Home' && styles.navTextActive]}>
-            Explore
-          </Text>
-        </TouchableOpacity>
+      <SafeAreaView edges={['bottom']} style={styles.bottomNavSafeArea}>
+        <View style={styles.bottomNav}>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setActiveTab('Home')}
+          >
+            <Text style={[styles.navIcon, activeTab === 'Home' && styles.navIconActiveColor]}>🏠</Text>
+            <Text style={[styles.navText, activeTab === 'Home' && styles.navTextActive]}>
+              Explore
+            </Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setActiveTab('Add')}
-        >
-          <Text style={[styles.navIcon, activeTab === 'Add' && styles.navIconActiveColor]}>🎁</Text>
-          <Text style={[styles.navText, activeTab === 'Add' && styles.navTextActive]}>
-            Add Gift
-          </Text>
-        </TouchableOpacity>
+          {isAdmin && (
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => setActiveTab('Add')}
+            >
+              <Text style={[styles.navIcon, activeTab === 'Add' && styles.navIconActiveColor]}>🎁</Text>
+              <Text style={[styles.navText, activeTab === 'Add' && styles.navTextActive]}>
+                Add Gift
+              </Text>
+            </TouchableOpacity>
+          )}
 
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setActiveTab('Products')}
-        >
-          <Text style={[styles.navIcon, activeTab === 'Products' && styles.navIconActiveColor]}>🛒</Text>
-          <Text style={[styles.navText, activeTab === 'Products' && styles.navTextActive]}>
-            Products
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => setActiveTab('Categories')}
-        >
-          <Text style={[styles.navIcon, activeTab === 'Categories' && styles.navIconActiveColor]}>☰</Text>
-          <Text style={[styles.navText, activeTab === 'Categories' && styles.navTextActive]}>
-            Menu
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.navItem}
+            onPress={() => setActiveTab('Products')}
+          >
+            <Text style={[styles.navIcon, activeTab === 'Products' && styles.navIconActiveColor]}>🛒</Text>
+            <Text style={[styles.navText, activeTab === 'Products' && styles.navTextActive]}>
+              Products
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
 
       <Modal
         visible={editingProduct !== null}
@@ -1262,7 +1206,7 @@ function MainApp() {
           >
             <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollView}>
               <View style={styles.addFormContainer}>
-                
+
                 {/* Form Input fields */}
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>GUNPLA MODEL NAME</Text>
@@ -1382,33 +1326,6 @@ function MainApp() {
                     ))}
                   </View>
                 </View>
-
-                {/* Status Selection */}
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>BADGE STATUS</Text>
-                  <View style={styles.gradeGrid}>
-                    {(['Active', 'Out of stock'] as const).map((status) => (
-                      <TouchableOpacity
-                        key={status}
-                        style={[
-                          styles.gradeSelectBtn,
-                          editProductBadgeStatus === status && styles.gradeSelectBtnActive,
-                        ]}
-                        onPress={() => setEditProductBadgeStatus(status)}
-                      >
-                        <Text
-                          style={[
-                            styles.gradeSelectBtnText,
-                            editProductBadgeStatus === status && styles.gradeSelectBtnTextActive,
-                          ]}
-                        >
-                          {status === 'Active' ? 'Active' : 'Stocked Out'}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
                 {/* Save button */}
                 <TouchableOpacity style={styles.formSubmitBtn} onPress={handleUpdateProduct}>
                   <Text style={styles.formSubmitBtnText}>SAVE CHANGES</Text>
@@ -2269,13 +2186,15 @@ const styles = StyleSheet.create({
   },
 
   // BOTTOM NAVIGATION BAR STYLING (Reebok Style Custom Nav)
-  bottomNav: {
-    flexDirection: 'row',
-    height: 64,
+  bottomNavSafeArea: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    paddingBottom: 6,
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    height: 60,
+    backgroundColor: '#FFFFFF',
     position: 'relative',
   },
   navItem: {
@@ -2358,10 +2277,15 @@ const styles = StyleSheet.create({
     color: '#1A1D24',
   },
   detailTitleText: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
     fontSize: 14,
     fontWeight: 'bold',
     color: '#1A1D24',
     letterSpacing: 1,
+    zIndex: -1,
   },
   detailStatusBadge: {
     paddingHorizontal: 10,
@@ -2373,7 +2297,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   detailHeroImageBg: {
-    width: width,
+    width: '100%',
     height: 250,
     alignItems: 'center',
     justifyContent: 'center',
