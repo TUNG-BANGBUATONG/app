@@ -16,10 +16,10 @@ import {
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Dimensions helper for layout
+// ตัวช่วยคำนวณขนาดหน้าจอสำหรับการจัดวางเลย์เอาต์
 const { width } = Dimensions.get('window');
 
-// Mock Product Interface
+// โครงสร้างข้อมูลจำลองของสินค้า
 interface Product {
   id: string;
   name: string;
@@ -34,9 +34,9 @@ interface Product {
   reviews: number;
 }
 
-// Initial Mock Data (Gunpla Kits)
+// ข้อมูลจำลองเริ่มต้น (โมเดลกันพลา)
 /*
-// Initial Mock Data (Gunpla Kits)
+// ข้อมูลจำลองเริ่มต้น (โมเดลกันพลา)
 const INITIAL_PRODUCTS: Product[] = [
   {
     id: '1',
@@ -118,7 +118,7 @@ export default function App() {
 
 function MainApp() {
   const insets = useSafeAreaInsets();
-  // Navigation / Login / View Details States
+  // สถานะต่างๆ สำหรับการนำทาง / ล็อกอิน / ดูรายละเอียด
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isRegistering, setIsRegistering] = useState<boolean>(false);
   const [user, setUser] = useState<{ id: number; username: string } | null>(null);
@@ -128,10 +128,10 @@ function MainApp() {
 
   const isAdmin = user?.username === 'admin';
 
-  // App Core States
+  // สถานะหลักของแอปพลิเคชัน (รายการสินค้า)
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Reusable fetch products
+  // ฟังก์ชันสำหรับดึงข้อมูลสินค้าจาก API
   const fetchProducts = async () => {
     try {
       const response = await fetch(API_URL);
@@ -162,7 +162,7 @@ function MainApp() {
     fetchProducts();
   }, []);
 
-  // Fetch product by ID details
+  // ฟังก์ชันสำหรับดึงข้อมูลรายละเอียดสินค้าตาม ID
   const viewProductDetails = async (id: string) => {
     try {
       const response = await fetch(`${API_URL}/${id}`);
@@ -195,7 +195,7 @@ function MainApp() {
   const [filterCategory, setFilterCategory] = useState<'All' | 'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('All');
   const [selectedScale, setSelectedScale] = useState<string>('1/144');
 
-  // Add Product Form States
+  // สถานะสำหรับฟอร์มเพิ่มสินค้า
   const [newProductName, setNewProductName] = useState<string>('');
   const [newProductPrice, setNewProductPrice] = useState<string>('');
   const [newProductGrade, setNewProductGrade] = useState<'PG' | 'MG' | 'RG' | 'HG' | 'SD'>('HG');
@@ -206,7 +206,7 @@ function MainApp() {
   const [newProductRating, setNewProductRating] = useState<string>('5.0');
   const [newProductReviews, setNewProductReviews] = useState<string>('0');
 
-  // Edit Product States
+  // สถานะสำหรับฟอร์มแก้ไขสินค้า
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [editProductName, setEditProductName] = useState<string>('');
   const [editProductPrice, setEditProductPrice] = useState<string>('');
@@ -218,7 +218,7 @@ function MainApp() {
   const [editProductRating, setEditProductRating] = useState<string>('5.0');
   const [editProductReviews, setEditProductReviews] = useState<string>('0');
 
-  // Web-safe Alert
+  // ฟังก์ชันแจ้งเตือนที่รองรับทั้งบนเว็บและมือถือ
   const showAlert = (title: string, message: string) => {
     if (Platform.OS === 'web') {
       window.alert(`${title}\n\n${message}`);
@@ -227,7 +227,7 @@ function MainApp() {
     }
   };
 
-  // Authentication Handlers
+  // ฟังก์ชันจัดการการล็อกอินและสมัครสมาชิก
   const handleLogin = async () => {
     if (!username.trim() || !password.trim()) {
       showAlert('Error', 'Please enter both username and password.');
@@ -286,14 +286,14 @@ function MainApp() {
     }
   };
 
-  // Logout Handler
+  // ฟังก์ชันจัดการการล็อกเอาต์
   const handleLogout = () => {
     setIsLoggedIn(false);
     setUser(null);
     setSelectedProduct(null);
   };
 
-  // Add Product Handler
+  // ฟังก์ชันจัดการการเพิ่มสินค้าใหม่
   const handleAddProduct = async () => {
     if (!newProductName.trim()) {
       Alert.alert('Validation Error', 'Please enter a product name.');
@@ -360,7 +360,7 @@ function MainApp() {
 
       Alert.alert('Success', 'Gunpla Model added to database successfully!');
 
-      // Reset Form
+      // ล้างข้อมูลในฟอร์ม
       setNewProductName('');
       setNewProductPrice('');
       setNewProductGrade('HG');
@@ -371,7 +371,7 @@ function MainApp() {
       setNewProductRating('5.0');
       setNewProductReviews('0');
 
-      // Refresh list
+      // อัปเดตรายการสินค้าใหม่
       await fetchProducts();
 
       setActiveTab('Products');
@@ -381,7 +381,7 @@ function MainApp() {
     }
   };
 
-  // Start Edit Mode
+  // เปิดโหมดแก้ไขสินค้า (นำข้อมูลเดิมมาใส่ในฟอร์ม)
   const handleStartEdit = (product: Product) => {
     setEditingProduct(product);
     setEditProductName(product.name);
@@ -395,7 +395,7 @@ function MainApp() {
     setEditProductReviews(String(product.reviews));
   };
 
-  // Submit Edit Handler
+  // ฟังก์ชันยืนยันการแก้ไขข้อมูลสินค้า
   const handleUpdateProduct = async () => {
     if (!editingProduct) return;
 
@@ -446,10 +446,10 @@ function MainApp() {
       Alert.alert('Success', 'Gunpla Model updated successfully!');
       setEditingProduct(null);
 
-      // Refresh list
+      // อัปเดตรายการสินค้าใหม่
       await fetchProducts();
 
-      // Refresh Detail View if active
+      // อัปเดตหน้ารายละเอียดสินค้าถ้ายอมเปิดดูอยู่
       if (selectedProduct && selectedProduct.id === editingProduct.id) {
         viewProductDetails(editingProduct.id);
       }
@@ -459,7 +459,7 @@ function MainApp() {
     }
   };
 
-  // Toggle Active Status via Server
+  // ฟังก์ชันสลับสถานะเปิด/ปิดการขายของสินค้า
   const toggleProductStatus = async (id: string) => {
     const product = products.find((p) => p.id === id);
     if (!product) return;
@@ -501,43 +501,52 @@ function MainApp() {
     }
   };
 
-  // Delete Product via Server
+  // ฟังก์ชันลบสินค้าผ่าน API
   const deleteProduct = (id: string) => {
-    Alert.alert(
-      'Remove Product',
-      'Are you sure you want to remove this Gunpla kit from the backend database?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const response = await fetch(`${API_URL}/${id}`, {
-                method: 'DELETE',
-              });
+    const confirmDelete = async () => {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: 'DELETE',
+        });
 
-              if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-              }
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-              Alert.alert('Success', 'Product removed from database.');
-              await fetchProducts();
+        showAlert('Success', 'Product removed from database.');
+        await fetchProducts();
 
-              if (selectedProduct && selectedProduct.id === id) {
-                setSelectedProduct(null);
-              }
-            } catch (error) {
-              console.error('Error deleting product:', error);
-              Alert.alert('Error', 'Could not delete product from server.');
-            }
+        if (selectedProduct && selectedProduct.id === id) {
+          setSelectedProduct(null);
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        showAlert('Error', 'Could not delete product from server.');
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      const confirmed = window.confirm('Are you sure you want to remove this Gunpla kit from the backend database?');
+      if (confirmed) {
+        confirmDelete();
+      }
+    } else {
+      Alert.alert(
+        'Remove Product',
+        'Are you sure you want to remove this Gunpla kit from the backend database?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Remove',
+            style: 'destructive',
+            onPress: confirmDelete,
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
-  // Filtering Logic
+  // ตรรกะการกรองและค้นหาสินค้า
   const filteredProducts = products.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       p.grade.toLowerCase().includes(searchQuery.toLowerCase());
@@ -545,7 +554,7 @@ function MainApp() {
     return matchesSearch && matchesCategory;
   });
 
-  // Calculate stats for Categories / Dashboard
+  // คำนวณสถิติสำหรับหน้าหมวดหมู่และแดชบอร์ด
   const categoryStats = ['PG', 'MG', 'RG', 'HG', 'SD'].map((grade) => {
     const items = products.filter((p) => p.grade === grade);
     const percentage = products.length > 0 ? (items.length / products.length) * 100 : 0;
@@ -557,7 +566,7 @@ function MainApp() {
     };
   });
 
-  // RENDER LOGIN SCREEN (Clean Light theme matching Reebok app card style)
+  // ส่วนแสดงผลหน้าล็อกอิน (ดีไซน์สว่าง เรียบง่าย)
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={styles.loginContainer}>
@@ -635,13 +644,13 @@ function MainApp() {
     );
   }
 
-  // RENDER PRODUCT DETAIL VIEW (Reebok Product Details Screen Style)
+  // ส่วนแสดงผลหน้ารายละเอียดสินค้า
   if (selectedProduct) {
     return (
       <SafeAreaView style={styles.detailContainer}>
         <StatusBar barStyle="dark-content" />
 
-        {/* Top Header Row with Back, Edit and Status toggle */}
+        {/* แถบด้านบนสุด: ปุ่มกลับ, แก้ไข, และสลับสถานะ */}
         <View style={styles.detailHeader}>
           <TouchableOpacity style={styles.backBtn} onPress={() => setSelectedProduct(null)}>
             <Text style={styles.backBtnIcon}>←</Text>
@@ -651,7 +660,7 @@ function MainApp() {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Main Hero Product Image with colored background box */}
+          {/* รูปภาพหลักของสินค้า พร้อมพื้นหลังสี */}
           <View style={[styles.detailHeroImageBg, { backgroundColor: selectedProduct.color }]}>
             {selectedProduct.image_url.startsWith('http') ? (
               <Image source={{ uri: selectedProduct.image_url }} style={styles.detailHeroImage} />
@@ -660,26 +669,35 @@ function MainApp() {
             )}
           </View>
 
-          {/* Product Details Section */}
+          {/* ส่วนรายละเอียดสินค้า */}
           <View style={styles.detailContent}>
+            {/* กล่องจัดระเบียบชื่อสินค้าและราคาให้อยู่บรรทัดเดียวกัน */}
             <View style={styles.detailNameRow}>
+              {/* แสดงชื่อสินค้า */}
               <Text style={styles.detailName}>{selectedProduct.name}</Text>
+              {/* แสดงราคาสินค้า โดยบังคับให้มีทศนิยม 2 ตำแหน่ง */}
               <Text style={styles.detailPrice}>${selectedProduct.price.toFixed(2)}</Text>
             </View>
 
-            {/* Rating Stars row */}
+            {/* แถวแสดงคะแนนรีวิว */}
             <View style={styles.detailRatingRow}>
+              {/* โชว์คะแนน Rating เช่น 4.5 / 5.0 */}
               <Text style={styles.starsText}>Rating: {selectedProduct.rating.toFixed(1)} / 5.0</Text>
+              {/* โชว์จำนวนคนที่รีวิว พร้อมใส่ลูกน้ำ (,) หลักพัน */}
               <Text style={styles.reviewsCountText}>({selectedProduct.reviews.toLocaleString()} Reviews)</Text>
             </View>
 
-            {/* Description */}
+            {/* คำอธิบายสินค้า */}
+            {/* หัวข้อ Description */}
             <Text style={styles.detailDescTitle}>Description</Text>
+            {/* ดึงข้อความรายละเอียดสินค้ามาแสดงผล */}
             <Text style={styles.detailDescText}>{selectedProduct.description}</Text>
 
-            {/* Size / Scale selector like Reebok App */}
+            {/* ตัวเลือกขนาด / สเกลของโมเดล */}
             <View style={styles.scaleSelectorRow}>
+              {/* หัวข้อสำหรับเลือกสเกล */}
               <Text style={styles.scaleSelectorTitle}>Scale / Grade Options</Text>
+              {/* แท็บหน่วยวัด (หลอกไว้เป็นลูกเล่น UI คล้ายๆ Reebok App) */}
               <View style={styles.scaleTabsRow}>
                 <Text style={styles.scaleTabUnit}>USA</Text>
                 <Text style={styles.scaleTabUnitActive}>JPN</Text>
@@ -687,20 +705,24 @@ function MainApp() {
               </View>
             </View>
 
-            {/* Scale options grid */}
+            {/* ตารางตัวเลือกสเกล */}
             <View style={styles.scaleOptionsGrid}>
+              {/* วนลูปสร้างปุ่มตัวเลือกสเกลจากอาร์เรย์ที่กำหนดไว้ */}
               {['1/144', '1/100', '1/60', 'SD', 'RE/100'].map((scale) => (
                 <TouchableOpacity
-                  key={scale}
+                  key={scale} // React ต้องการ key ไม่ซ้ำกันเมื่อมีการวนลูปสร้าง UI
                   style={[
-                    styles.scaleOptionBtn,
+                    styles.scaleOptionBtn, // สไตล์พื้นฐานของปุ่มกรอบสี่เหลี่ยม
+                    // ถ้าผู้ใช้กดเลือกสเกลนี้ หรือเป็นสเกลตั้งต้นของสินค้า ให้ใช้สไตล์แบบ Active (ปุ่มสีดำ)
                     (selectedScale === scale || selectedProduct.scale === scale) && styles.scaleOptionBtnActive,
                   ]}
+                  // เมื่อกดปุ่ม ให้เปลี่ยนค่า state เป็นสเกลที่ถูกกด
                   onPress={() => setSelectedScale(scale)}
                 >
                   <Text
                     style={[
-                      styles.scaleOptionText,
+                      styles.scaleOptionText, // สไตล์ข้อความพื้นฐาน (ตัวอักษรสีดำ)
+                      // ถ้าสเกลนี้ถูกเลือกอยู่ ให้เปลี่ยนสีข้อความเป็นสีขาว เพื่อให้ตัดกับปุ่มสีดำ
                       (selectedScale === scale || selectedProduct.scale === scale) && styles.scaleOptionTextActive,
                     ]}
                   >
@@ -712,7 +734,7 @@ function MainApp() {
           </View>
         </ScrollView>
 
-        {/* Floating bottom buy button */}
+        {/* ปุ่มกดซื้อสินค้าด้านล่าง (ปุ่มลอย) */}
         <View style={styles.detailBottomBar}>
           <TouchableOpacity
             style={[styles.addToBagBtn, { backgroundColor: '#3CE0B0' }]}
@@ -722,7 +744,7 @@ function MainApp() {
                 `You have successfully bought ${selectedProduct.name}!`
               );
               if (!isAdmin) {
-                // Mock purchase: remove from state for users
+                // จำลองการซื้อ: ลบออกจากระบบ (เฉพาะฝั่งลูกค้า)
                 setProducts(products.filter(p => p.id !== selectedProduct.id));
               }
               setSelectedProduct(null);
@@ -735,12 +757,12 @@ function MainApp() {
     );
   }
 
-  // RENDER APP MAIN SCREEN (Reebok style list and UI flow)
+  // ส่วนแสดงผลหน้าหลักของแอปพลิเคชัน
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" />
 
-      {/* 1. HEADER (Explore title on Left, profile avatar on Right) */}
+      {/* 1. ส่วนหัว: ชื่อหน้าอยู่ซ้าย, รูปโปรไฟล์อยู่ขวา */}
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <Text style={styles.headerTitle}>Explore</Text>
@@ -754,7 +776,7 @@ function MainApp() {
           </View>
         </View>
 
-        {/* Search Bar / Add Button row (Hide on Add Tab) */}
+        {/* แถบส่วนค้นหาและปุ่มเพิ่ม (ซ่อนในแท็บ Add) */}
         {activeTab !== 'Add' && (
           <>
             <View style={styles.searchBarRow}>
@@ -769,7 +791,7 @@ function MainApp() {
                 />
               </View>
 
-              {/* Quick Add Shortcut */}
+              {/* ปุ่มทางลัดสำหรับเพิ่มสินค้าด่วน */}
               {isAdmin && (
                 <TouchableOpacity style={styles.headerAddBtn} onPress={() => setActiveTab('Add')}>
                   <Text style={styles.headerAddBtnText}>+ Add</Text>
@@ -777,7 +799,7 @@ function MainApp() {
               )}
             </View>
 
-            {/* Categories Quick Filter Pill list */}
+            {/* รายการปุ่มกรองหมวดหมู่แบบรวดเร็ว */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -815,13 +837,13 @@ function MainApp() {
           </>
         )}
 
-        {/* Removed Segmented Control */}
+        {/* (นำส่วนตัวเลือกแบบแบ่งส่วนออกแล้ว) */}
       </View>
 
-      {/* 2. BODY CONTENT AREA */}
+      {/* 2. ส่วนพื้นที่เนื้อหาหลัก */}
       <View style={styles.body}>
 
-        {/* --- HOME TAB VIEW (Explore) --- */}
+        {/* --- เนื้อหาแท็บหน้าแรก (Explore) --- */}
         {activeTab === 'Home' && (
           <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
 
@@ -841,7 +863,7 @@ function MainApp() {
                   style={styles.featuredCard}
                   onPress={() => viewProductDetails(item.id)}
                 >
-                  {/* Styled Image background with Reebok colored corner style */}
+                  {/* พื้นหลังรูปภาพแบบมีดีไซน์สีตัดกันที่มุม */}
                   <View style={[styles.featuredImageBg, { backgroundColor: item.color }]}>
                     {item.image_url.startsWith('http') ? (
                       <Image source={{ uri: item.image_url }} style={styles.featuredImage} />
@@ -850,7 +872,7 @@ function MainApp() {
                     )}
                   </View>
 
-                  {/* Product Details under image */}
+                  {/* รายละเอียดสินค้าที่อยู่ใต้รูปภาพ */}
                   <Text style={styles.featuredPrice}>${item.price.toFixed(0)}</Text>
 
                   <View style={styles.featuredRatingRow}>
@@ -868,7 +890,7 @@ function MainApp() {
           </ScrollView>
         )}
 
-        {/* --- PRODUCTS TAB VIEW (Standard list + active actions) --- */}
+        {/* --- เนื้อหาแท็บรายการสินค้า (แสดงผลแบบรายการยาว) --- */}
         {activeTab === 'Products' && (
           <View style={styles.productsTabContainer}>
             <View style={styles.productsSummaryHeader}>
@@ -902,7 +924,7 @@ function MainApp() {
                     style={styles.productCard}
                     onPress={() => viewProductDetails(item.id)}
                   >
-                    {/* Visual Card Image with gradient styling */}
+                    {/* รูปภาพสินค้าในการ์ด พร้อมสไตล์ไล่สี */}
                     <View style={[styles.productImageContainer, { backgroundColor: item.color }]}>
                       {item.image_url.startsWith('http') ? (
                         <Image source={{ uri: item.image_url }} style={styles.productImage} />
@@ -914,7 +936,7 @@ function MainApp() {
                       </View>
                     </View>
 
-                    {/* Card Content details */}
+                    {/* รายละเอียดเนื้อหาภายในการ์ด */}
                     <View style={styles.productDetailsContainer}>
                       <Text style={styles.productCardTitle} numberOfLines={2}>
                         {item.name}
@@ -922,7 +944,7 @@ function MainApp() {
                       <Text style={styles.productCardPrice}>${item.price.toFixed(2)}</Text>
                     </View>
 
-                    {/* Action buttons (Edit & Delete) */}
+                    {/* ปุ่มจัดการ (แก้ไข & ลบ) */}
                     {isAdmin && (
                       <View style={styles.productActions}>
                         <TouchableOpacity
@@ -947,7 +969,7 @@ function MainApp() {
           </View>
         )}
 
-        {/* --- ADD PRODUCT TAB VIEW --- */}
+        {/* --- เนื้อหาแท็บฟอร์มเพิ่มสินค้า --- */}
         {activeTab === 'Add' && (
           <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
             <View style={styles.addFormContainer}>
@@ -956,7 +978,7 @@ function MainApp() {
                 Register a new mobile suit kit to the store catalog.
               </Text>
 
-              {/* Form Input fields */}
+              {/* ช่องกรอกข้อมูลต่างๆ ในฟอร์ม */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>GUNPLA MODEL NAME</Text>
                 <TextInput
@@ -1050,7 +1072,7 @@ function MainApp() {
                 />
               </View>
 
-              {/* Grade Selection Row */}
+              {/* แถวสำหรับเลือกเกรดของโมเดล */}
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>GUNPLA GRADE CATEGORY</Text>
                 <View style={styles.gradeGrid}>
@@ -1075,7 +1097,7 @@ function MainApp() {
                   ))}
                 </View>
               </View>
-              {/* Submit button */}
+              {/* ปุ่มกดยืนยันข้อมูล */}
               <TouchableOpacity style={styles.formSubmitBtn} onPress={handleAddProduct}>
                 <Text style={styles.formSubmitBtnText}>DEPLOY TO CATALOG</Text>
               </TouchableOpacity>
@@ -1083,7 +1105,7 @@ function MainApp() {
           </ScrollView>
         )}
 
-        {/* --- CATEGORIES TAB VIEW --- */}
+        {/* --- เนื้อหาแท็บหมวดหมู่ / แดชบอร์ด --- */}
         {activeTab === 'Categories' && (
           <ScrollView showsVerticalScrollIndicator={false} style={styles.tabContent}>
             <View style={styles.categoriesHeader}>
@@ -1109,7 +1131,7 @@ function MainApp() {
                   <Text style={styles.categoryCountBadge}>{stat.count} Kits</Text>
                 </View>
 
-                {/* Progress bar representer */}
+                {/* แถบหลอดแสดงความคืบหน้า / สัดส่วน */}
                 <View style={styles.progressContainer}>
                   <View
                     style={[
@@ -1148,7 +1170,7 @@ function MainApp() {
 
       </View>
 
-      {/* 3. BOTTOM NAVIGATION (Reebok style menu layout) */}
+      {/* 3. ส่วนเมนูด้านล่าง (Footbar) */}
       <SafeAreaView edges={['bottom']} style={styles.bottomNavSafeArea}>
         <View style={styles.bottomNav}>
           <TouchableOpacity
@@ -1207,7 +1229,7 @@ function MainApp() {
             <ScrollView showsVerticalScrollIndicator={false} style={styles.modalScrollView}>
               <View style={styles.addFormContainer}>
 
-                {/* Form Input fields */}
+                {/* ช่องกรอกข้อมูลต่างๆ ในฟอร์ม */}
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>GUNPLA MODEL NAME</Text>
                   <TextInput
@@ -1301,7 +1323,7 @@ function MainApp() {
                   />
                 </View>
 
-                {/* Grade Selection */}
+                {/* ตัวเลือกเกรดของโมเดล */}
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>GUNPLA GRADE CATEGORY</Text>
                   <View style={styles.gradeGrid}>
@@ -1341,9 +1363,9 @@ function MainApp() {
   );
 }
 
-// CSS STYLING (StyleSheet.create - Theme: Reebok Light/Mint and Coral Red)
+// สไตล์ CSS ทั้งหมดของแอป (กำหนดสี รูปแบบต่างๆ)
 const styles = StyleSheet.create({
-  // LOGIN SCREEN STYLING (Light clean UI matching Reebok card aesthetics)
+  // สไตล์ CSS สำหรับหน้าล็อกอิน
   loginContainer: {
     flex: 1,
     backgroundColor: '#F8F9FA',
@@ -1462,13 +1484,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  // MAIN SCREEN CONTAINER
+  // สไตล์สำหรับคอนเทนเนอร์หน้าหลัก
   container: {
     flex: 1,
     backgroundColor: '#F8F9FB', // Light backgrounds
   },
 
-  // HEADER STYLING (Reebok explore theme style)
+  // สไตล์สำหรับส่วนหัว (Header)
   header: {
     backgroundColor: '#FFFFFF',
     paddingHorizontal: 16,
@@ -1624,7 +1646,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
 
-  // BODY & TAB CONTAINER STYLING
+  // สไตล์สำหรับเนื้อหาและแท็บเมนู
   body: {
     flex: 1,
     backgroundColor: '#F8F9FB',
@@ -1634,7 +1656,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
 
-  // HERO BANNER STYLING (Premium Red Box Reebok Style)
+  // สไตล์สำหรับแบนเนอร์ด้านบน
   heroCard: {
     width: '100%',
     backgroundColor: '#FFFFFF',
@@ -1704,7 +1726,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // METRICS STYLING
+  // สไตล์สำหรับกล่องแสดงสถิติต่างๆ
   sectionTitle: {
     color: '#1A1D24',
     fontSize: 12,
@@ -1755,7 +1777,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // FEATURED ITEMS STYLING (Reebok Cards Layout)
+  // สไตล์สำหรับสินค้าแนะนำ
   featuredScrollView: {
     marginBottom: 24,
   },
@@ -1837,7 +1859,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  // PRODUCTS LIST TAB STYLING
+  // สไตล์สำหรับแท็บรายการสินค้า
   productsTabContainer: {
     flex: 1,
   },
@@ -1957,7 +1979,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // EMPTY STATE STYLING
+  // สไตล์สำหรับตอนที่ไม่มีข้อมูล
   emptyContainer: {
     flex: 1,
     alignItems: 'center',
@@ -1996,7 +2018,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
-  // ADD FORM STYLING
+  // สไตล์สำหรับฟอร์มเพิ่มสินค้า
   addFormContainer: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
@@ -2108,7 +2130,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // CATEGORIES TAB STYLING
+  // สไตล์สำหรับแท็บหมวดหมู่ (แดชบอร์ด)
   categoriesHeader: {
     marginBottom: 20,
   },
@@ -2185,7 +2207,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
 
-  // BOTTOM NAVIGATION BAR STYLING (Reebok Style Custom Nav)
+  // สไตล์สำหรับแถบเมนูด้านล่าง (Footbar)
   bottomNavSafeArea: {
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
@@ -2249,7 +2271,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
 
-  // PRODUCT DETAIL VIEW STYLING (Reebok Product Details screen)
+  // สไตล์สำหรับหน้ารายละเอียดสินค้า
   detailContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
